@@ -1,3 +1,10 @@
+import Navbar from "@/components/navbar";
+
 export default function Home() {
-  return <p>Court Connect</p>;
+  return (
+    <div>
+      <Navbar />
+      <p>TODO: Dashboard</p>
+    </div>
+  );
 }
