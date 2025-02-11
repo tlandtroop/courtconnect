@@ -17,8 +17,29 @@ const Navbar = () => {
           </div>
 
           {/* Right side - User Profile */}
-          <div className="flex items-center">
-            <UserButton afterSignOutUrl="/" />
+          <div className="flex items-center gap-8">
+            <Link
+              href="/dashboard"
+              className="hover:text-blue-600 cursor-pointer"
+            >
+              Dashboard
+            </Link>
+            <Link href="/courts" className="hover:text-blue-600 cursor-pointer">
+              Find Courts
+            </Link>
+            <Link
+              href="/schedule"
+              className="hover:text-blue-600 cursor-pointer"
+            >
+              Schedule Game
+            </Link>
+            <Link
+              href="/discussions"
+              className="hover:text-blue-600 cursor-pointer"
+            >
+              Discussions
+            </Link>
+            <UserButton showName />
           </div>
         </div>
       </div>
