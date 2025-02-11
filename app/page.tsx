@@ -1,10 +1,12 @@
-import Navbar from "@/components/navbar";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return (
-    <div>
-      <Navbar />
-      <p>TODO: Dashboard</p>
-    </div>
-  );
+export default async function Home() {
+  const { userId } = await auth();
+
+  if (userId) {
+    redirect("/dashboard");
+  }
+
+  return;
 }
