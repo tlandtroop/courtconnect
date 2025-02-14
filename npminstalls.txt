@@ -4,3 +4,4 @@ npx prisma init
 npm install redis
 npm install socket.io
 npm install socket.io-client
+npm install -g ts-node
