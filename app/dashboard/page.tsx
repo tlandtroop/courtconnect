@@ -1,9 +1,9 @@
 import Navbar from "@/components/navbar";
-import MapPreview from "@/components/map-preview";
 import UpcomingGames from "@/components/upcoming-games";
 import Weather from "@/components/weather";
 import RecentActivity from "@/components/recent-activity";
 import RecentDiscussions from "@/components/recent-discussions";
+import GoogleMaps from "@/components/google-maps";
 
 export default function DashboardPage() {
   return (
@@ -13,7 +13,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-12 gap-6">
           {/* Left Column - 8/12 width */}
           <div className="col-span-8 space-y-6">
-            <MapPreview />
+            <GoogleMaps />
             <UpcomingGames />
           </div>
 
