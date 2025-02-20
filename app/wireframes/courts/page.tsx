@@ -2,6 +2,8 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Star, Users } from "lucide-react";
 
+const apiKey = `${process.env.GOOGLE_MAPS_API}`;
+const search = "search?q=sports+courts+in+Gainesville";
 const CourtMapWireframe = () => {
   return (
     <div className="min-h-screen bg-gray-100">
@@ -91,7 +93,9 @@ const CourtMapWireframe = () => {
           <div className="col-span-9 space-y-6">
             <div className="bg-white rounded-lg shadow">
               <div className="bg-gray-200 h-[600px] rounded-lg flex items-center justify-center">
-                Interactive Map
+                <iframe className="bg-gray-200 h-[600px] rounded-lg flex items-center justify-center" width="100%" height="100%" loading="lazy"
+                  src={"https://www.google.com/maps/embed/v1/"+search+"&key="+apiKey}>
+                </iframe>
               </div>
             </div>
 
