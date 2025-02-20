@@ -1,9 +1,13 @@
-'use client'; // Mark the component as a Client Component
+'use client';
 import { useEffect } from 'react';
 import { io } from 'socket.io-client';
+ import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import Navbar from '@/components/navbar';
 
-export default function Home() {
+export default async function Home() {
+  const { userId } = await auth();
+  
   useEffect(() => {
     // Initialize Socket.io connection
     const socket = io();
@@ -19,11 +23,10 @@ export default function Home() {
       socket.disconnect();
     };
   }, []);
+  
+  if (userId) {
+      redirect("/dashboard");
+    }
 
-  return (
-    <div>
-      <Navbar />
-      <p>TODO: Dashboard</p>
-    </div>
-  );
+  return;
 }
