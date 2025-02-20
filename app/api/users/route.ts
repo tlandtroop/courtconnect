@@ -1,15 +1,10 @@
-import { NextResponse } from 'next/server';
-import prisma from '../../../lib/prisma';
-import redisClient from '../../../lib/redis';
+import { NextResponse } from "next/server";
+
+import prisma from "@/lib/prisma";
 
 export async function GET() {
-  const cachedData = await redisClient.get('users');
-  if (cachedData) {
-    return NextResponse.json(JSON.parse(cachedData));
-  }
-
   const users = await prisma.user.findMany();
-  await redisClient.set('users', JSON.stringify(users), { EX: 60 }); // Cache for 60 seconds
+
   return NextResponse.json(users);
 }
 
