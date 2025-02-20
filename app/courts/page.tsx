@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Navbar from "@/components/navbar";
 import Filters from "@/components/filters";
 import GoogleMaps from "@/components/google-maps";
 import CourtLists from "@/components/court-lists";
 
 export default function CourtsPage() {
-  const [searchValue, setSearchValue] = useState('');
-  const handleValueChange = (newValue:any) => {
+  const [searchValue, setSearchValue] = useState("");
+  const handleValueChange = (newValue: any) => {
     setSearchValue(newValue);
   };
   return (
