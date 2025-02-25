@@ -1,8 +1,12 @@
-import { UserButton } from "@clerk/nextjs";
+"use client";
+
 import Link from "next/link";
 import { Home, Calendar, Users } from "lucide-react";
+import { UserButton, useUser } from "@clerk/nextjs";
 
 const Navbar = () => {
+  const { user } = useUser();
+
   return (
     <nav className="border-b bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,6 +43,14 @@ const Navbar = () => {
             >
               Discussions
             </Link>
+            {user && (
+              <Link
+                href={`/profile/${user.id}`}
+                className="hover:text-blue-600 cursor-pointer"
+              >
+                Profile
+              </Link>
+            )}
             <UserButton showName />
           </div>
         </div>
