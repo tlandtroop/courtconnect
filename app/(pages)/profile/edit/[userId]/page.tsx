@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, AtSign, FileText, AlertCircle } from "lucide-react";
+import { MapPin, AtSign, FileText, AlertCircle, Loader2 } from "lucide-react";
 import Navbar from "@/components/navbar";
+import { toast } from "sonner";
 
 export default function ProfileEditPage() {
   const { user, isLoaded } = useUser();
@@ -22,6 +23,12 @@ export default function ProfileEditPage() {
   });
 
   useEffect(() => {
+    // Redirect if not logged in
+    if (isLoaded && !user) {
+      router.push("/sign-in");
+      return;
+    }
+
     const fetchUserData = async () => {
       if (!user) return;
 
@@ -29,10 +36,13 @@ export default function ProfileEditPage() {
         const response = await fetch(`/api/users/${user.id}`);
 
         if (!response.ok) {
-          throw new Error("Failed to fetch user data");
+          const errorData = await response.json();
+          console.error("API error when fetching:", errorData);
+          throw new Error(errorData.error || "Failed to fetch user data");
         }
 
         const userData = await response.json();
+
         setFormData({
           username: userData.username || "",
           bio: userData.bio || "",
@@ -46,10 +56,10 @@ export default function ProfileEditPage() {
       }
     };
 
-    if (isLoaded) {
+    if (isLoaded && user) {
       fetchUserData();
     }
-  }, [user, isLoaded]);
+  }, [user, isLoaded, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -66,8 +76,14 @@ export default function ProfileEditPage() {
     setSaving(true);
     setError("");
 
+    if (!user) {
+      setError("You must be logged in to update your profile");
+      setSaving(false);
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/users/${user?.id}`, {
+      const response = await fetch(`/api/users/${user.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -77,15 +93,24 @@ export default function ProfileEditPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("API error when updating:", errorData);
         throw new Error(errorData.error || "Failed to update profile");
       }
 
+      toast("Profile Updated", {
+        description: "Your profile has been successfully updated.",
+      });
+
       // Redirect to profile page on success
-      router.push(`/profile/${user?.id}`);
+      router.push(`/profile/${user.id}`);
       router.refresh();
     } catch (error: any) {
       console.error("Error updating profile:", error);
       setError(error.message || "Failed to update profile");
+
+      toast("Error Updating Profile", {
+        description: "An error occurred while updating your profile.",
+      });
     } finally {
       setSaving(false);
     }
@@ -97,7 +122,10 @@ export default function ProfileEditPage() {
         <Navbar />
         <div className="max-w-3xl mx-auto px-8 py-6">
           <div className="flex items-center justify-center min-h-[40vh]">
-            <div className="text-lg text-gray-500">Loading...</div>
+            <div className="text-lg text-gray-500 flex flex-col items-center gap-2">
+              <Loader2 className="size-6 animate-spin" />
+              Loading...
+            </div>
           </div>
         </div>
       </div>

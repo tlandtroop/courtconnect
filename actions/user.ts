@@ -5,7 +5,7 @@ import db from "@/lib/db";
 
 export async function syncUserWithDatabase() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     const user = await currentUser();
 
     if (!userId || !user) {
