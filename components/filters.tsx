@@ -5,9 +5,6 @@ const Filters = ({value, onValueChange}:any) => {
   const handleSearch = (event:any) => {
     onValueChange(event.target.value)
   }
-  const handleClick = () => {
-    window.location.reload()
-  }
   return (
     <Card>
     <CardHeader>
@@ -25,9 +22,6 @@ const Filters = ({value, onValueChange}:any) => {
             value={value}
             onChange={handleSearch}
           />
-        </div>
-        <div className="w-full pl-10 pr-4 py-2 border rounded-lg">
-          <button onClick={handleClick}>Search</button>
         </div>
         {/* Filters */}
         <div className="space-y-4">
