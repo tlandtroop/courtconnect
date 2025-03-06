@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/navbar";
 import GameForm from "@/components/game-form";
 import CourtAvailability from "@/components/court-availability";
@@ -26,4 +25,4 @@ export default function SchedulePage() {
       </div>
     </div>
   );
-};
+}
