@@ -21,11 +21,13 @@ model User {
   rating        Float     @default(0)
   
   // Relations
+
   games         Game[]    @relation("GameParticipants")
   createdGames  Game[]    @relation("GameOrganizer")
   favorites     Court[]   @relation("UserFavorites")
   friends       User[]    @relation("UserFriends")
   friendsOf     User[]    @relation("UserFriends")
+
 
   // Game history and stats
   gamesPlayed   Int       @default(0)
@@ -61,12 +63,14 @@ model Court {
 
 model Game {
   id            String    @id @default(cuid())
+
   date          DateTime
   startTime     DateTime
   gameType      String
   skillLevel    String
   playersNeeded Int
   notes         String?
+
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
