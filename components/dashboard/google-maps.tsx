@@ -1,5 +1,6 @@
-const GoogleMaps = ({ searchValue, apiKey }: any) => {
-  apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API;
+const DashboardGoogleMaps = () => {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API;
+  const search = "sports+courts+in+Gainesville";
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="bg-gray-200 h-[600px] rounded-lg flex items-center justify-center">
@@ -10,7 +11,7 @@ const GoogleMaps = ({ searchValue, apiKey }: any) => {
           loading="lazy"
           src={
             "https://www.google.com/maps/embed/v1/search?q=" +
-            searchValue +
+            search +
             "&key=" +
             apiKey
           }
@@ -21,4 +22,4 @@ const GoogleMaps = ({ searchValue, apiKey }: any) => {
   );
 };
 
-export default GoogleMaps;
+export default DashboardGoogleMaps;
