@@ -8,75 +8,75 @@ datasource db {
 }
 
 model User {
-  id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  clerkId     String    @unique
-  email       String    @unique
-  name        String?
-  username    String?   @unique
-  bio         String?
-  location    String?
-  avatarUrl   String?
-  rating      Float     @default(0)
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  clerkId       String    @unique
+  email         String    @unique
+  name          String?
+  username      String?   @unique
+  bio           String?
+  location      String?
+  avatarUrl     String?
+  rating        Float     @default(0)
   
   // Relations
-  games       Game[]    @relation("GameParticipants")
-  createdGames Game[]   @relation("GameOrganizer")
-  favorites   Court[]   @relation("UserFavorites")
-  friends     User[]    @relation("UserFriends")
-  friendsOf   User[]    @relation("UserFriends")
+  games         Game[]    @relation("GameParticipants")
+  createdGames  Game[]    @relation("GameOrganizer")
+  favorites     Court[]   @relation("UserFavorites")
+  friends       User[]    @relation("UserFriends")
+  friendsOf     User[]    @relation("UserFriends")
 
   // Game history and stats
-  gamesPlayed Int       @default(0)
-  courtsVisited Int     @default(0)
+  gamesPlayed   Int       @default(0)
+  courtsVisited Int       @default(0)
 }
 
 model Court {
-  id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  name        String
-  description String?
-  latitude    Float
-  longitude   Float
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  name            String
+  description     String?
+  latitude        Float
+  longitude       Float
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
   
   // Features and amenities
-  hasLights   Boolean   @default(false)
-  hasWaterFountain Boolean @default(false)
-  hasRestrooms Boolean  @default(false)
+  hasLights       Boolean   @default(false)
+  hasWaterFountain Boolean  @default(false)
+  hasRestrooms    Boolean   @default(false)
   
   // Court types
-  isPickleball Boolean  @default(false)
-  isBasketball Boolean  @default(false)
+  isPickleball    Boolean   @default(false)
+  isBasketball    Boolean   @default(false)
   
   // Relations
-  games       Game[]
-  favoritedBy User[]    @relation("UserFavorites")
+  games           Game[]
+  favoritedBy     User[]    @relation("UserFavorites")
 }
 
 model Game {
-  id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  date        DateTime
-  startTime   DateTime
-  endTime     DateTime?
-  
-  // Game details
-  gameType    String    // e.g., "Pickleball - Singles", "Basketball - 3v3"
-  skillLevel  String    // e.g., "Beginner", "Intermediate", "Advanced"
+  id            String    @id @default(cuid())
+  date          DateTime
+  startTime     DateTime
+  gameType      String
+  skillLevel    String
   playersNeeded Int
-  notes       String?
+  notes         String?
   
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
   // Relations
-  courtId     String
-  court       Court     @relation(fields: [courtId], references: [id])
-  organizerId String
-  organizer   User      @relation("GameOrganizer", fields: [organizerId], references: [id])
-  participants User[]   @relation("GameParticipants")
+  court         Court     @relation(fields: [courtId], references: [id])
+  courtId       String
+  
+  organizer     User      @relation("GameOrganizer", fields: [organizerId], references: [id])
+  organizerId   String
+  
+  participants  User[]    @relation("GameParticipants")
 }

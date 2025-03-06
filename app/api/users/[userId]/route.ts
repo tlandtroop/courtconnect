@@ -25,9 +25,7 @@ export async function GET(
       where: { clerkId: userId },
       include: {
         games: {
-          include: {
-            court: true,
-          },
+          include: {},
           orderBy: {
             date: "desc",
           },
