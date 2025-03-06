@@ -21,8 +21,8 @@ model User {
   rating      Float     @default(0)
   
   // Relations
-  games       Game[]    @relation("GameParticipants")
-  createdGames Game[]   @relation("GameOrganizer")
+  // games       Game[]    @relation("GameParticipants")
+  // createdGames Game[]   @relation("GameOrganizer")
   favorites   Court[]   @relation("UserFavorites")
   friends     User[]    @relation("UserFriends")
   friendsOf   User[]    @relation("UserFriends")
@@ -55,28 +55,25 @@ model Court {
   isBasketball Boolean  @default(false)
   
   // Relations
-  games       Game[]
+  // games       Game[]
   favoritedBy User[]    @relation("UserFavorites")
 }
 
 model Game {
-  id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  date        DateTime
-  startTime   DateTime
-  endTime     DateTime?
-  
-  // Game details
-  gameType    String    // e.g., "Pickleball - Singles", "Basketball - 3v3"
-  skillLevel  String    // e.g., "Beginner", "Intermediate", "Advanced"
+  id            Int       @id @default(autoincrement())
+  date          DateTime
+  startTime     DateTime
+  gameType      String
+  skillLevel    String
   playersNeeded Int
-  notes       String?
-  
-  // Relations
-  courtId     String
-  court       Court     @relation(fields: [courtId], references: [id])
-  organizerId String
-  organizer   User      @relation("GameOrganizer", fields: [organizerId], references: [id])
-  participants User[]   @relation("GameParticipants")
+  notes         String?
+  courtId       Int
+  organizerId   String
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Comment out the relation temporarily
+  // court       Court    @relation(fields: [courtId], references: [id])
 }
+
