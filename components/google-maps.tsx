@@ -1,5 +1,5 @@
-const GoogleMaps = ({searchValue, apiKey}:any) => {
-  apiKey = process.env.GOOGLE_MAPS_API;
+const GoogleMaps = ({searchValue}:any) => {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API;
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="bg-gray-200 h-[600px] rounded-lg flex items-center justify-center">

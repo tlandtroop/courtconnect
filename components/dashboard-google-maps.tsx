@@ -1,5 +1,5 @@
 const DashboardGoogleMaps = () => {
-    const apiKey = process.env.GOOGLE_MAPS_API;
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API;
     const search = "sports+courts+in+Gainesville";
     return (
       <div className="bg-white rounded-lg shadow">
