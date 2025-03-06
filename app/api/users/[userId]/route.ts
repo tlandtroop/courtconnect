@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     console.log("API GET request received with params:", params);
-    const { userId } = params;
+    const { userId } = await params;
 
     console.log("Looking up user with clerkId:", userId);
 
@@ -50,6 +50,7 @@ export async function GET(
         friends: {
           select: {
             id: true,
+            clerkId: true,
             name: true,
             username: true,
             avatarUrl: true,

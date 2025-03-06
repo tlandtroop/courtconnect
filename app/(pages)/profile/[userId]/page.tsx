@@ -42,6 +42,7 @@ interface Court {
 
 interface Friend {
   id: string;
+  clerkId: string;
   name?: string;
   username?: string;
   avatarUrl?: string;
@@ -411,7 +412,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="space-y-4">
                     {profile.friends.map((friend) => (
-                      <Link href={`/profile/${friend.id}`} key={friend.id}>
+                      <Link href={`/profile/${friend.clerkId}`} key={friend.id}>
                         <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
                           <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
                             {friend.avatarUrl ? (
