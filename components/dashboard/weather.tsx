@@ -1,6 +1,12 @@
 import { CloudRain } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const Weather = () => {
   return (
@@ -10,6 +16,7 @@ const Weather = () => {
           <CloudRain className="w-5 h-5" />
           Weather
         </CardTitle>
+        <CardDescription>Check conditions before playing</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="bg-gray-50 p-6 rounded-lg">

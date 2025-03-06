@@ -1,14 +1,27 @@
-import { Calendar } from "lucide-react";
+import Link from "next/link";
+import { Calendar, Plus } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const UpcomingGames = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Upcoming Games
+        <CardTitle className="flex items-center justify-between gap-2">
+          <span className="flex items-center">
+            <Calendar className="w-5 h-5 mr-2" />
+            Upcoming Games
+          </span>
+          <Link href="/schedule">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <Plus className="w-4 h-4" /> Schedule Game
+            </Button>
+          </Link>
         </CardTitle>
       </CardHeader>
       <CardContent>
