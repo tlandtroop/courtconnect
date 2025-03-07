@@ -25,11 +25,13 @@ export async function GET(
       where: { clerkId: userId },
       include: {
         games: {
-          include: {},
+          include: {
+            court: true,
+          },
           orderBy: {
             date: "desc",
           },
-          take: 5, // Limit to recent games
+          take: 5,
         },
         createdGames: {
           include: {

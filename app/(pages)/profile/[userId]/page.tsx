@@ -413,7 +413,8 @@ export default function ProfilePage() {
                 </TabsList>
 
                 <TabsContent value="upcoming" className="p-6">
-                  {profile.createdGames.length === 0 ? (
+                  {!profile.createdGames ||
+                  profile.createdGames.length === 0 ? (
                     <div className="text-center text-gray-500 py-6">
                       No upcoming games.
                       {isOwnProfile && (
@@ -444,7 +445,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="text-sm text-gray-600 mt-1 flex items-center gap-1">
                                   <MapPin className="w-3 h-3" />
-                                  {game.court.name}
+                                  {game.court?.name || "Unknown Court"}
                                 </div>
                               </div>
                               <div className="text-right flex flex-col items-end">
@@ -460,42 +461,54 @@ export default function ProfilePage() {
 
                             <div className="mt-3 pt-3 border-t flex justify-between items-center">
                               <div className="flex -space-x-2">
-                                {game.participants
-                                  .slice(0, 3)
-                                  .map((participant, i) => (
-                                    <div
-                                      key={i}
-                                      className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-gray-200"
-                                    >
-                                      {participant.avatarUrl ? (
-                                        <Image
-                                          width={32}
-                                          height={32}
-                                          src={participant.avatarUrl}
-                                          alt={
-                                            participant.name || "Participant"
-                                          }
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        <div className="w-full h-full bg-blue-100 flex items-center justify-center text-blue-500 text-xs font-bold">
-                                          {participant.name
-                                            ? participant.name
-                                                .charAt(0)
-                                                .toUpperCase()
-                                            : "U"}
+                                {game.participants &&
+                                game.participants.length > 0 ? (
+                                  <>
+                                    {game.participants
+                                      .slice(0, 3)
+                                      .map((participant, i) => (
+                                        <div
+                                          key={i}
+                                          className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-gray-200"
+                                        >
+                                          {participant.avatarUrl ? (
+                                            <Image
+                                              width={32}
+                                              height={32}
+                                              src={participant.avatarUrl}
+                                              alt={
+                                                participant.name ||
+                                                "Participant"
+                                              }
+                                              className="w-full h-full object-cover"
+                                            />
+                                          ) : (
+                                            <div className="w-full h-full bg-blue-100 flex items-center justify-center text-blue-500 text-xs font-bold">
+                                              {participant.name
+                                                ? participant.name
+                                                    .charAt(0)
+                                                    .toUpperCase()
+                                                : "U"}
+                                            </div>
+                                          )}
                                         </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                {game.participants.length > 3 && (
-                                  <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600">
-                                    +{game.participants.length - 3}
+                                      ))}
+                                    {game.participants.length > 3 && (
+                                      <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600">
+                                        +{game.participants.length - 3}
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <div className="text-sm text-gray-500">
+                                    No participants yet
                                   </div>
                                 )}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {game.participants.length}/{game.playersNeeded}{" "}
+                                {game.participants
+                                  ? `${game.participants.length}/${game.playersNeeded}`
+                                  : `0/${game.playersNeeded}`}{" "}
                                 players
                               </div>
                             </div>

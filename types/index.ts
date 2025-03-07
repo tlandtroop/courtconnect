@@ -9,23 +9,27 @@ export interface Court {
 
 export interface Game {
   id: string;
-  date: string;
-  startTime: string;
-  endTime?: string;
   gameType: string;
   skillLevel: string;
+  date: string;
+  startTime: string;
   playersNeeded: number;
   notes?: string;
+  participants: UserProfile[];
+  organizer: UserProfile;
   court: {
     id: string;
     name: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    hasLights: boolean;
+    hasWaterFountain: boolean;
+    hasRestrooms: boolean;
+    isPickleball: boolean;
+    isBasketball: boolean;
   };
-  participants: {
-    id: string;
-    name?: string;
-    username?: string;
-    avatarUrl?: string;
-  }[];
 }
 
 export interface Friend {

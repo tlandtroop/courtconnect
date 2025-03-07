@@ -1,91 +1,49 @@
+// app/api/games/[gameId]/route.ts
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 
 import db from "@/lib/db";
 
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+  { params }: { params: { gameId: string } }
+) {
   try {
-    const { userId } = await auth();
-    const { searchParams } = new URL(request.url);
+    const { gameId } = params;
 
-    const type = searchParams.get("type") || "upcoming"; // "upcoming" or "history"
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
-      );
-    }
-
-    const user = await db.user.findUnique({
-      where: { clerkId: userId },
+    const game = await db.game.findUnique({
+      where: { id: gameId },
+      include: {
+        court: true,
+        organizer: {
+          select: {
+            id: true,
+            clerkId: true,
+            name: true,
+            username: true,
+            avatarUrl: true,
+            rating: true,
+          },
+        },
+        participants: {
+          select: {
+            id: true,
+            clerkId: true,
+            name: true,
+            username: true,
+            avatarUrl: true,
+            rating: true,
+          },
+        },
+      },
     });
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!game) {
+      return NextResponse.json({ error: "Game not found" }, { status: 404 });
     }
 
-    // Different query based on the type of games requested
-    if (type === "upcoming") {
-      const upcomingGames = await db.game.findMany({
-        where: {
-          OR: [
-            { organizerId: user.id },
-            { participants: { some: { id: user.id } } },
-          ],
-          date: {
-            gte: new Date(),
-          },
-        },
-        include: {
-          court: true,
-          participants: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              avatarUrl: true,
-            },
-          },
-        },
-        orderBy: {
-          date: "asc",
-        },
-      });
-
-      return NextResponse.json(upcomingGames);
-    } else {
-      const gameHistory = await db.game.findMany({
-        where: {
-          OR: [
-            { organizerId: user.id },
-            { participants: { some: { id: user.id } } },
-          ],
-          date: {
-            lt: new Date(),
-          },
-        },
-        include: {
-          court: true,
-          participants: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              avatarUrl: true,
-            },
-          },
-        },
-        orderBy: {
-          date: "desc",
-        },
-        take: 10, // Limit to the 10 most recent games
-      });
-
-      return NextResponse.json(gameHistory);
-    }
+    return NextResponse.json(game);
   } catch (error) {
-    console.error("[GET_USER_GAMES]", error);
+    console.error("[GET_GAME]", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

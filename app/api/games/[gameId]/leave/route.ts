@@ -1,4 +1,4 @@
-// app/api/games/[gameId]/join/route.ts
+// app/api/games/[gameId]/leave/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
@@ -37,40 +37,32 @@ export async function POST(
       return NextResponse.json({ error: "Game not found" }, { status: 404 });
     }
 
-    // Check if the game is in the past
-    if (new Date(game.date) < new Date()) {
+    // Check if the user is the organizer
+    if (game.organizerId === user.id) {
       return NextResponse.json(
-        { error: "Cannot join a game that has already taken place" },
+        { error: "Organizers cannot leave their own games" },
         { status: 400 }
       );
     }
 
-    // Check if the game is full
-    if (game.participants.length >= game.playersNeeded) {
-      return NextResponse.json(
-        { error: "Game is already full" },
-        { status: 400 }
-      );
-    }
-
-    // Check if user is already a participant
+    // Check if user is a participant
     const isParticipant = game.participants.some(
       (participant) => participant.id === user.id
     );
 
-    if (isParticipant) {
+    if (!isParticipant) {
       return NextResponse.json(
-        { error: "You are already a participant in this game" },
+        { error: "You are not a participant in this game" },
         { status: 400 }
       );
     }
 
-    // Add user to participants
+    // Remove user from participants
     const updatedGame = await db.game.update({
       where: { id: gameId },
       data: {
         participants: {
-          connect: { id: user.id },
+          disconnect: { id: user.id },
         },
       },
       include: {
@@ -100,7 +92,7 @@ export async function POST(
 
     return NextResponse.json(updatedGame);
   } catch (error) {
-    console.error("[JOIN_GAME]", error);
+    console.error("[LEAVE_GAME]", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
