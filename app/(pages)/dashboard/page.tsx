@@ -220,7 +220,7 @@ export default function DashboardPage() {
                     players of similar skill levels.
                   </div>
                   <div className="mt-3">
-                    <Link href={`/profile/edit/${user?.id}`}>
+                    <Link href={`/profile/${user?.id}`}>
                       <Button variant="outline" size="sm">
                         Complete Profile
                       </Button>

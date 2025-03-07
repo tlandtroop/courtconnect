@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: { gameId: string } }
 ) {
   try {
-    const { gameId } = params;
+    const { gameId } = await params;
 
     const game = await db.game.findUnique({
       where: { id: gameId },

@@ -1,10 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import { Search, MapPin, Star, Filter, Calendar, UserPlus } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Star,
+  Filter,
+  Calendar,
+  UserPlus,
+  Loader2,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +42,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import Navbar from "@/components/navbar";
+import { toast } from "sonner";
 
 interface Player {
   id: string;
@@ -46,9 +55,10 @@ interface Player {
   skillLevel: string;
   gamesPlayed: number;
   winRate: number;
-  memberSince: string;
+  createdAt: string;
   lastActive: string;
   isFriend: boolean;
+  friendsCount: number;
 }
 
 const skillLevels = [
@@ -60,6 +70,7 @@ const skillLevels = [
 
 export default function PlayersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useUser();
 
   const [players, setPlayers] = useState<Player[]>([]);
@@ -69,100 +80,65 @@ export default function PlayersPage() {
   const [locationFilter, setLocationFilter] = useState("");
   const [sortBy, setSortBy] = useState("rating");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isAddingFriend, setIsAddingFriend] = useState<string | null>(null);
 
   const playersPerPage = 10;
 
-  useEffect(() => {
-    const fetchPlayers = async () => {
-      try {
-        // This would be your actual API call
-        // const response = await fetch('/api/players');
-        // const data = await response.json();
+  // Function to fetch players with filters
+  const fetchPlayers = async () => {
+    setLoading(true);
+    try {
+      // Build query params
+      const params = new URLSearchParams();
 
-        // For now, we'll use mock data
-        const mockPlayers: Player[] = Array.from({ length: 30 }, (_, i) => ({
-          id: `player-${i + 1}`,
-          clerkId: `clerk-${i + 1}`,
-          name: `Player ${i + 1}`,
-          username: `player${i + 1}`,
-          avatarUrl:
-            i % 3 === 0 ? `/avatars/avatar-${(i % 5) + 1}.png` : undefined,
-          location:
-            i % 4 === 0
-              ? "Gainesville, FL"
-              : i % 4 === 1
-              ? "Miami, FL"
-              : i % 4 === 2
-              ? "Orlando, FL"
-              : "Tampa, FL",
-          rating: 2.5 + (i % 8) * 0.5,
-          skillLevel:
-            i % 8 < 2
-              ? "beginner"
-              : i % 8 < 5
-              ? "intermediate"
-              : i % 8 < 7
-              ? "advanced"
-              : "expert",
-          gamesPlayed: 5 + i * 3,
-          winRate: 40 + (i % 11) * 5,
-          memberSince: new Date(2023, i % 12, (i % 28) + 1).toISOString(),
-          lastActive: new Date(2024, 2, (i % 28) + 1).toISOString(),
-          isFriend: i % 7 === 0,
-        }));
+      if (searchQuery) params.append("search", searchQuery);
+      if (skillFilter.length > 0)
+        params.append("skillLevel", skillFilter.join(","));
+      if (locationFilter) params.append("location", locationFilter);
 
-        setPlayers(mockPlayers);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching players:", error);
-        setLoading(false);
+      params.append("sortBy", sortBy);
+      params.append("page", currentPage.toString());
+      params.append("limit", playersPerPage.toString());
+
+      const response = await fetch(`/api/players?${params.toString()}`);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to fetch players");
       }
-    };
 
-    fetchPlayers();
-  }, []);
-
-  const filteredPlayers = players.filter((player) => {
-    const matchesSearch =
-      !searchQuery ||
-      player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.username.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesSkill =
-      skillFilter.length === 0 || skillFilter.includes(player.skillLevel);
-
-    const matchesLocation =
-      !locationFilter ||
-      (player.location &&
-        player.location.toLowerCase().includes(locationFilter.toLowerCase()));
-
-    return matchesSearch && matchesSkill && matchesLocation;
-  });
-
-  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    switch (sortBy) {
-      case "rating":
-        return b.rating - a.rating;
-      case "games":
-        return b.gamesPlayed - a.gamesPlayed;
-      case "winRate":
-        return b.winRate - a.winRate;
-      case "recentlyActive":
-        return (
-          new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime()
-        );
-      default:
-        return 0;
+      const data = await response.json();
+      setPlayers(data.players);
+      setTotalCount(data.totalCount);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      console.error("Error fetching players:", error);
+      toast.error("Failed to load players");
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
-  const indexOfLastPlayer = currentPage * playersPerPage;
-  const indexOfFirstPlayer = indexOfLastPlayer - playersPerPage;
-  const currentPlayers = sortedPlayers.slice(
-    indexOfFirstPlayer,
-    indexOfLastPlayer
-  );
-  const totalPages = Math.ceil(sortedPlayers.length / playersPerPage);
+  // Effect to fetch players when filters change
+  useEffect(() => {
+    if (user) {
+      fetchPlayers();
+    }
+  }, [currentPage, sortBy, user]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (user) {
+        setCurrentPage(1); // Reset to first page on new search
+        fetchPlayers();
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, skillFilter, locationFilter]);
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -200,18 +176,39 @@ export default function PlayersPage() {
     );
   };
 
-  const handleAddFriend = (e: React.MouseEvent, playerId: string) => {
+  const handleAddFriend = async (e: React.MouseEvent, playerId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    // This would be your actual API call to add a friend
-    console.log(`Adding friend: ${playerId}`);
 
-    // Update UI optimistically
-    setPlayers(
-      players.map((player) =>
-        player.id === playerId ? { ...player, isFriend: true } : player
-      )
-    );
+    setIsAddingFriend(playerId);
+
+    try {
+      const response = await fetch(`/api/friends/${playerId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to add friend");
+      }
+
+      // Update UI optimistically
+      setPlayers(
+        players.map((player) =>
+          player.id === playerId ? { ...player, isFriend: true } : player
+        )
+      );
+
+      toast.success("Friend added successfully");
+    } catch (error) {
+      console.error("Error adding friend:", error);
+      toast.error("Failed to add friend");
+    } finally {
+      setIsAddingFriend(null);
+    }
   };
 
   const handleScheduleGame = (e: React.MouseEvent, playerId: string) => {
@@ -337,8 +334,7 @@ export default function PlayersPage() {
         {/* Player count */}
         <div className="flex justify-between items-center mb-4">
           <p className="text-sm text-gray-500">
-            {sortedPlayers.length}{" "}
-            {sortedPlayers.length === 1 ? "player" : "players"} found
+            {totalCount} {totalCount === 1 ? "player" : "players"} found
           </p>
         </div>
 
@@ -367,7 +363,7 @@ export default function PlayersPage() {
                 </CardContent>
               </Card>
             ))
-          ) : currentPlayers.length === 0 ? (
+          ) : players.length === 0 ? (
             <Card className="overflow-hidden">
               <CardContent className="p-6 text-center">
                 <p className="text-gray-500">No players match your criteria</p>
@@ -384,13 +380,16 @@ export default function PlayersPage() {
               </CardContent>
             </Card>
           ) : (
-            currentPlayers.map((player) => (
+            players.map((player) => (
               <Link href={`/profile/${player.clerkId}`} key={player.id}>
                 <Card className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-0">
                     <div className="p-4 flex items-center gap-4">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={player.avatarUrl} />
+                        <AvatarImage
+                          src={player.avatarUrl || ""}
+                          alt={player.name}
+                        />
                         <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
                       </Avatar>
 
@@ -445,8 +444,13 @@ export default function PlayersPage() {
                             variant="ghost"
                             onClick={(e) => handleAddFriend(e, player.id)}
                             className="text-blue-600 hover:text-blue-700"
+                            disabled={isAddingFriend === player.id}
                           >
-                            <UserPlus className="h-4 w-4" />
+                            {isAddingFriend === player.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <UserPlus className="h-4 w-4" />
+                            )}
                           </Button>
                         )}
                         <Button
