@@ -7,7 +7,7 @@ import GoogleMaps from "@/components/google-maps";
 import CourtLists from "@/components/court-lists";
 
 export default function CourtsPage() {
-  const [searchValue, setSearchValue] = useState("sports+courts+in+Gainesville");
+  const [searchValue, setSearchValue] = useState("sports+courts+in+Gainesville+within+5+miles");
   const handleValueChange = (newValue: any) => {
     const words: string[] = newValue.split(/\s+/);
     const val: string = words.join("+");
@@ -17,7 +17,7 @@ export default function CourtsPage() {
   const handlePickleChange = (newPickle: any) => {
     setCheckedPickle(newPickle);
     if (!checkedPickle) {
-      const val = searchValue + "+pickleball";
+      const val = searchValue + "+pickleball+";
       setSearchValue(val);
     }
     else {
@@ -30,7 +30,7 @@ export default function CourtsPage() {
   const handleBasketChange = (newBasket: any) => {
     setCheckedBasket(newBasket);
     if (!checkedBasket) {
-      const val = searchValue + "+basketball";
+      const val = searchValue + "+basketball+";
       setSearchValue(val);
     }
     else {
@@ -43,7 +43,7 @@ export default function CourtsPage() {
   const handleTennisChange = (newTennis: any) => {
     setCheckedTennis(newTennis);
     if (!checkedTennis) {
-      const val = searchValue + "+tennis";
+      const val = searchValue + "+tennis+";
       setSearchValue(val);
     }
     else {
@@ -56,7 +56,7 @@ export default function CourtsPage() {
   const handleVolleyChange = (newVolley: any) => {
     setCheckedVolley(newVolley);
     if (!checkedVolley) {
-      const val = searchValue + "+volleyball";
+      const val = searchValue + "+volleyball+";
       setSearchValue(val);
     }
     else {
@@ -64,6 +64,16 @@ export default function CourtsPage() {
       const val: string = words.join("+");
       setSearchValue(val);
     }
+  }
+  const [slider, setSlider] = useState([5]);
+  const handleSliderChange = (newSlider: any) => {
+    setSlider([newSlider]);
+    const words: string[] = searchValue.split(/\+within\+[0-9]*\+miles/);
+    const res: string = words.join("+");
+    const str = "within+" + slider + "+miles+";
+    const val = res + str;
+    setSearchValue(val);
+    console.log(searchValue);
   }
   return (
     <div className="min-h-screen bg-gray-100">
@@ -78,6 +88,8 @@ export default function CourtsPage() {
               onBasketChange={handleBasketChange} 
               onTennisChange={handleTennisChange} 
               onVolleyChange={handleVolleyChange} 
+              slider={slider} 
+              onSliderChange={handleSliderChange} 
           />
           </div>
           <div className="col-span-9 space-y-6">

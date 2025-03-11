@@ -2,7 +2,7 @@ import React from "react";
 import { Search, } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const Filters = ({onValueChange, onPickleChange, onBasketChange, onTennisChange, onVolleyChange}:any) => {
+const Filters = ({onValueChange, onPickleChange, onBasketChange, onTennisChange, onVolleyChange, slider, onSliderChange}:any) => {
   const handleSearch = (event:any) => {
     onValueChange(event.target.value)
   }
@@ -17,6 +17,9 @@ const Filters = ({onValueChange, onPickleChange, onBasketChange, onTennisChange,
   }
   const handleVolleyChange = (event:any) => {
     onVolleyChange(event.target.checked);
+  }
+  const handleSlide = (event:any) => {
+    onSliderChange(event.target.value);
   }
   return (
     <Card>
@@ -59,9 +62,14 @@ const Filters = ({onValueChange, onPickleChange, onBasketChange, onTennisChange,
 
           <div className="space-y-2">
             <div className="font-medium">Distance</div>
-            <input type="range" className="w-full" />
+            <input type="range" className="w-full" 
+              step={1} 
+              min={1} 
+              max={10} 
+              onChange={handleSlide}
+            />
             <div className="text-sm text-gray-500">
-              Within 5 miles
+              Within {slider} miles
             </div>
           </div>
         </div>
