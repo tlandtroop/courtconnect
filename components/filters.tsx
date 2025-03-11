@@ -1,9 +1,22 @@
+import React from "react";
 import { Search, } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const Filters = ({value, onValueChange}:any) => {
+const Filters = ({onValueChange, onPickleChange, onBasketChange, onTennisChange, onVolleyChange}:any) => {
   const handleSearch = (event:any) => {
     onValueChange(event.target.value)
+  }
+  const handlePickleCheck = (event:any) => {
+    onPickleChange(event.target.checked);
+  }
+  const handleBasketCheck = (event:any) => {
+    onBasketChange(event.target.checked);
+  }
+  const handleTennisCheck = (event:any) => {
+    onTennisChange(event.target.checked);
+  }
+  const handleVolleyChange = (event:any) => {
+    onVolleyChange(event.target.checked);
   }
   return (
     <Card>
@@ -19,7 +32,6 @@ const Filters = ({value, onValueChange}:any) => {
             className="w-full pl-10 pr-4 py-2 border rounded-lg"
             type="text"
             placeholder="Search by location..."
-            value={value}
             onChange={handleSearch}
           />
         </div>
@@ -28,12 +40,20 @@ const Filters = ({value, onValueChange}:any) => {
           <div className="font-medium">Filters</div>
           <div className="space-y-2">
             <label className="flex items-center gap-2">
-              <input type="checkbox" />
+              <input type="checkbox" onChange={handlePickleCheck} />
               <span>Pickleball Courts</span>
             </label>
             <label className="flex items-center gap-2">
-              <input type="checkbox" />
+              <input type="checkbox" onChange={handleBasketCheck} />
               <span>Basketball Courts</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" onChange={handleTennisCheck} />
+              <span>Tennis Courts</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" onChange={handleVolleyChange} />
+              <span>Volleyball Courts</span>
             </label>
           </div>
 
@@ -43,22 +63,6 @@ const Filters = ({value, onValueChange}:any) => {
             <div className="text-sm text-gray-500">
               Within 5 miles
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="font-medium">Amenities</div>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" />
-              <span>Lights</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" />
-              <span>Water Fountain</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" />
-              <span>Restrooms</span>
-            </label>
           </div>
         </div>
       </div>
