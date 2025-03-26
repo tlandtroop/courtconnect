@@ -4,7 +4,6 @@ import { useState } from "react";
 import Navbar from "@/components/navbar";
 import Filters from "@/components/filters";
 import GoogleMaps from "@/components/google-maps";
-import CourtLists from "@/components/court-lists";
 
 export default function CourtsPage() {
   const [searchValue, setSearchValue] = useState("sports+courts+in+Gainesville+within+5+miles");
@@ -94,7 +93,6 @@ export default function CourtsPage() {
           </div>
           <div className="col-span-9 space-y-6">
             <GoogleMaps searchValue={searchValue} />
-            <CourtLists />
           </div>
         </div>
       </div>
