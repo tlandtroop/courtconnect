@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import {
@@ -43,6 +43,8 @@ import {
 } from "@/components/ui/pagination";
 import Navbar from "@/components/navbar";
 import { toast } from "sonner";
+import { findPlayers } from "@/actions/players/index";
+import { addFriend } from "@/actions/users/friends";
 
 interface Player {
   id: string;
@@ -70,7 +72,6 @@ const skillLevels = [
 
 export default function PlayersPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user } = useUser();
 
   const [players, setPlayers] = useState<Player[]>([]);
@@ -90,29 +91,23 @@ export default function PlayersPage() {
   const fetchPlayers = async () => {
     setLoading(true);
     try {
-      // Build query params
-      const params = new URLSearchParams();
+      // Build query parameters for server action
+      const result = await findPlayers({
+        search: searchQuery,
+        skillLevel: skillFilter.length > 0 ? skillFilter.join(",") : undefined,
+        location: locationFilter || undefined,
+        sortBy,
+        page: currentPage,
+        limit: playersPerPage,
+      });
 
-      if (searchQuery) params.append("search", searchQuery);
-      if (skillFilter.length > 0)
-        params.append("skillLevel", skillFilter.join(","));
-      if (locationFilter) params.append("location", locationFilter);
-
-      params.append("sortBy", sortBy);
-      params.append("page", currentPage.toString());
-      params.append("limit", playersPerPage.toString());
-
-      const response = await fetch(`/api/players?${params.toString()}`);
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to fetch players");
+      if (result.success && result.players) {
+        setPlayers(result.players as unknown as Player[]);
+        setTotalCount(result.pagination?.total || 0);
+        setTotalPages(result.pagination?.pages || 1);
+      } else {
+        throw new Error(result.error || "Failed to fetch players");
       }
-
-      const data = await response.json();
-      setPlayers(data.players);
-      setTotalCount(data.totalCount);
-      setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching players:", error);
       toast.error("Failed to load players");
@@ -126,7 +121,7 @@ export default function PlayersPage() {
     if (user) {
       fetchPlayers();
     }
-  }, [currentPage, sortBy, user]);
+  }, [currentPage, sortBy, skillFilter, locationFilter, user]);
 
   // Debounced search effect
   useEffect(() => {
@@ -180,29 +175,23 @@ export default function PlayersPage() {
     e.preventDefault();
     e.stopPropagation();
 
+    if (isAddingFriend) return; // Prevent multiple clicks
+
     setIsAddingFriend(playerId);
-
     try {
-      const response = await fetch(`/api/friends/${playerId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Use the server action to add friend
+      const result = await addFriend(playerId);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to add friend");
+      if (result.success) {
+        // Update the player in the list to show as friend
+        setPlayers((current) =>
+          current.map((p) => (p.id === playerId ? { ...p, isFriend: true } : p))
+        );
+
+        toast.success("Friend added successfully!");
+      } else {
+        throw new Error(result.error || "Failed to add friend");
       }
-
-      // Update UI optimistically
-      setPlayers(
-        players.map((player) =>
-          player.id === playerId ? { ...player, isFriend: true } : player
-        )
-      );
-
-      toast.success("Friend added successfully");
     } catch (error) {
       console.error("Error adding friend:", error);
       toast.error("Failed to add friend");
@@ -216,6 +205,21 @@ export default function PlayersPage() {
     e.stopPropagation();
     // Redirect to schedule page with the player pre-selected
     router.push(`/schedule?player=${playerId}`);
+  };
+
+  // Handle filter changes
+  const handleSkillFilterChange = (skill: string) => {
+    const updatedFilters = skillFilter.includes(skill)
+      ? skillFilter.filter((s) => s !== skill)
+      : [...skillFilter, skill];
+
+    setSkillFilter(updatedFilters);
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+
+  const handleApplyFilters = () => {
+    setCurrentPage(1);
+    fetchPlayers();
   };
 
   return (
@@ -299,9 +303,7 @@ export default function PlayersPage() {
                 {getSkillLevelLabel(skill)}
                 <button
                   className="ml-1 text-gray-500 hover:text-gray-700"
-                  onClick={() =>
-                    setSkillFilter(skillFilter.filter((s) => s !== skill))
-                  }
+                  onClick={() => handleSkillFilterChange(skill)}
                 >
                   ×
                 </button>
@@ -321,10 +323,7 @@ export default function PlayersPage() {
             <Button
               variant="link"
               className="text-xs h-auto p-0"
-              onClick={() => {
-                setSkillFilter([]);
-                setLocationFilter("");
-              }}
+              onClick={handleApplyFilters}
             >
               Clear all
             </Button>
@@ -367,14 +366,7 @@ export default function PlayersPage() {
             <Card className="overflow-hidden">
               <CardContent className="p-6 text-center">
                 <p className="text-gray-500">No players match your criteria</p>
-                <Button
-                  variant="link"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSkillFilter([]);
-                    setLocationFilter("");
-                  }}
-                >
+                <Button variant="link" onClick={handleApplyFilters}>
                   Clear all filters
                 </Button>
               </CardContent>

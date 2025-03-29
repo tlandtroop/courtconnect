@@ -1,15 +1,16 @@
 "use server";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import db from "@/lib/db";
 
-export async function syncUserWithDatabase() {
+export async function syncUser() {
   try {
     const { userId } = await auth();
     const user = await currentUser();
 
     if (!userId || !user) {
-      throw new Error("Unauthorized");
+      return { success: false, error: "Unauthorized" };
     }
 
     // Check if user already exists in our database
@@ -18,7 +19,7 @@ export async function syncUserWithDatabase() {
     });
 
     if (existingUser) {
-      // User exists, update their information if needed
+      // User exists, just update their information if needed
       const updatedUser = await db.user.update({
         where: { clerkId: userId },
         data: {
@@ -26,6 +27,9 @@ export async function syncUserWithDatabase() {
           avatarUrl: user.imageUrl,
         },
       });
+
+      revalidatePath(`/profile/${userId}`);
+      revalidatePath("/dashboard");
 
       return { success: true, user: updatedUser };
     }
@@ -36,7 +40,7 @@ export async function syncUserWithDatabase() {
     );
 
     if (!primaryEmail) {
-      throw new Error("Email address is required");
+      return { success: false, error: "Email address is required" };
     }
 
     const email = primaryEmail.emailAddress;
@@ -52,12 +56,50 @@ export async function syncUserWithDatabase() {
         name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
         username: tempUsername,
         avatarUrl: user.imageUrl,
+        rating: 2.5, // Default rating for new users
+        gamesPlayed: 0,
+        courtsVisited: 0,
       },
     });
+
+    revalidatePath(`/profile/${userId}`);
+    revalidatePath("/dashboard");
 
     return { success: true, user: newUser };
   } catch (error) {
     console.error("[SYNC_USER]", error);
-    return { success: false, error: "Failed to sync user information" };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to sync user",
+    };
+  }
+}
+
+export async function getUser() {
+  try {
+    const { userId } = await auth();
+    const user = await currentUser();
+
+    if (!userId || !user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Check if user already exists in our database
+    const existingUser = await db.user.findUnique({
+      where: { clerkId: userId },
+    });
+
+    if (existingUser) {
+      // User exists, just return their info
+      return { success: true, user: existingUser };
+    }
+
+    return { success: false, error: "User not found in database" };
+  } catch (error) {
+    console.error("[GET_USER]", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get user",
+    };
   }
 }

@@ -13,7 +13,6 @@ export default function ProfileRedirect() {
       if (user) {
         router.push(`/profile/${user.id}`);
       } else {
-        // Not logged in, redirect to sign in
         router.push("/sign-in");
       }
     }

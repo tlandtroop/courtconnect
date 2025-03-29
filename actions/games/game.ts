@@ -1,15 +1,9 @@
-// app/api/games/[gameId]/route.ts
-import { NextResponse } from "next/server";
+"use server";
 
 import db from "@/lib/db";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { gameId: string } }
-) {
+export async function getGame(gameId: string) {
   try {
-    const { gameId } = await params;
-
     const game = await db.game.findUnique({
       where: { id: gameId },
       include: {
@@ -38,15 +32,15 @@ export async function GET(
     });
 
     if (!game) {
-      return NextResponse.json({ error: "Game not found" }, { status: 404 });
+      return { success: false, error: "Game not found" };
     }
 
-    return NextResponse.json(game);
+    return { success: true, game };
   } catch (error) {
     console.error("[GET_GAME]", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get game",
+    };
   }
 }

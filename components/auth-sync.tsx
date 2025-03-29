@@ -1,9 +1,8 @@
-// components/auth-sync.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { syncUser } from "@/actions/auth/sync-user";
 
 /**
  * This component synchronizes the Clerk user with our database
@@ -11,19 +10,15 @@ import { useRouter } from "next/navigation";
  */
 export default function AuthSync() {
   const { isLoaded, isSignedIn, userId } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
-    const syncUser = async () => {
+    const performSync = async () => {
       if (isLoaded && isSignedIn && userId) {
         try {
-          // Call your API endpoint to sync user data
-          const response = await fetch("/api/sync-user", {
-            method: "POST",
-          });
+          const result = await syncUser();
 
-          if (!response.ok) {
-            console.error("Failed to sync user with database");
+          if (!result.success) {
+            console.error("Failed to sync user with database:", result.error);
           }
         } catch (error) {
           console.error("Error syncing user with database:", error);
@@ -31,8 +26,8 @@ export default function AuthSync() {
       }
     };
 
-    syncUser();
+    performSync();
   }, [isLoaded, isSignedIn, userId]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

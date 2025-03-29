@@ -1,22 +1,15 @@
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
+"use server";
 
 import db from "@/lib/db";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { userId: string } }
-) {
+export async function getUserGames(userId: string, type: string = "upcoming") {
   try {
-    const { userId } = params;
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type") || "upcoming";
     const user = await db.user.findUnique({
       where: { clerkId: userId },
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return { success: false, error: "User not found" };
     }
 
     // Different query based on the type of games requested
@@ -47,7 +40,7 @@ export async function GET(
         },
       });
 
-      return NextResponse.json(upcomingGames);
+      return { success: true, games: upcomingGames };
     } else {
       const gameHistory = await db.game.findMany({
         where: {
@@ -76,13 +69,14 @@ export async function GET(
         take: 10, // Limit to the 10 most recent games
       });
 
-      return NextResponse.json(gameHistory);
+      return { success: true, games: gameHistory };
     }
   } catch (error) {
     console.error("[GET_USER_GAMES]", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to get user games",
+    };
   }
 }

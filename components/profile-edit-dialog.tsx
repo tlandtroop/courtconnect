@@ -20,6 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+// Import server actions
+import { getUserProfile, updateUserProfile } from "@/actions/users/profile";
+
 interface ProfileEditDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -53,21 +56,18 @@ export default function ProfileEditDialog({
       setError("");
 
       try {
-        const response = await fetch(`/api/users/${userId}`);
+        // Call server action to get user profile
+        const result = await getUserProfile(userId);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("API error when fetching:", errorData);
-          throw new Error(errorData.error || "Failed to fetch user data");
+        if (result.success && result.user) {
+          setFormData({
+            username: result.user.username || "",
+            bio: result.user.bio || "",
+            location: result.user.location || "",
+          });
+        } else {
+          throw new Error(result.error || "Failed to fetch user data");
         }
-
-        const userData = await response.json();
-
-        setFormData({
-          username: userData.username || "",
-          bio: userData.bio || "",
-          location: userData.location || "",
-        });
       } catch (error) {
         console.error("Error fetching user data:", error);
         setError("Failed to load your profile data");
@@ -103,32 +103,27 @@ export default function ProfileEditDialog({
     }
 
     try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      // Call server action to update user profile
+      const result = await updateUserProfile(userId, formData);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API error when updating:", errorData);
-        throw new Error(errorData.error || "Failed to update profile");
+      if (result.success) {
+        toast("Profile Updated", {
+          description: "Your profile has been successfully updated.",
+        });
+
+        // Notify parent that profile was updated
+        onProfileUpdated();
+
+        // Close the dialog
+        onClose();
+      } else {
+        throw new Error(result.error || "Failed to update profile");
       }
-
-      toast("Profile Updated", {
-        description: "Your profile has been successfully updated.",
-      });
-
-      // Notify parent that profile was updated
-      onProfileUpdated();
-
-      // Close the dialog
-      onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating profile:", error);
-      setError(error.message || "Failed to update profile");
+      setError(
+        error instanceof Error ? error.message : "Failed to update profile"
+      );
 
       toast("Error Updating Profile", {
         description: "An error occurred while updating your profile.",

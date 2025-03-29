@@ -1,23 +1,31 @@
-import { NextResponse } from "next/server";
+"use server";
+
 import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
 
-export async function GET(request: Request) {
+export async function findPlayers({
+  search,
+  skillLevel,
+  location,
+  sortBy = "rating",
+  page = 1,
+  limit = 10,
+}: {
+  search?: string;
+  skillLevel?: string;
+  location?: string;
+  sortBy?: string;
+  page?: number;
+  limit?: number;
+}) {
   try {
     const { userId } = await auth();
-    const { searchParams } = new URL(request.url);
-
-    // Optional query parameters
-    const search = searchParams.get("search");
-    const skillLevel = searchParams.get("skillLevel");
-    const location = searchParams.get("location");
-    const sortBy = searchParams.get("sortBy") || "rating";
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return { success: false, error: "Unauthorized" };
     }
+
+    const skip = (page - 1) * limit;
 
     // Base query to find all users except the current user
     const query: any = {
@@ -45,6 +53,8 @@ export async function GET(request: Request) {
           },
         },
       },
+      skip,
+      take: limit,
     };
 
     // Add search filter if provided
@@ -81,7 +91,7 @@ export async function GET(request: Request) {
       };
     }
 
-    // Sorting logic
+    // Add sorting
     switch (sortBy) {
       case "rating":
         query.orderBy = { rating: "desc" };
@@ -89,62 +99,39 @@ export async function GET(request: Request) {
       case "games":
         query.orderBy = { gamesPlayed: "desc" };
         break;
-      case "winRate":
-        query.orderBy = { winRate: "desc" };
+      case "name":
+        query.orderBy = { name: "asc" };
         break;
-      case "recentlyActive":
+      case "recent":
         query.orderBy = { lastActive: "desc" };
         break;
       default:
         query.orderBy = { rating: "desc" };
     }
 
-    // Pagination
-    const skip = (page - 1) * limit;
-    query.skip = skip;
-    query.take = limit;
-
-    // Execute the query to get players
-    const players = await db.user.findMany(query);
-
     // Get total count for pagination
     const totalCount = await db.user.count({
       where: query.where,
     });
 
-    // Find which players are friends with the current user
-    const currentUser = await db.user.findUnique({
-      where: { clerkId: userId },
-      include: {
-        friends: {
-          select: {
-            id: true,
-          },
-        },
+    // Execute the query
+    const players = await db.user.findMany(query);
+
+    return {
+      success: true,
+      players,
+      pagination: {
+        total: totalCount,
+        pages: Math.ceil(totalCount / limit),
+        page,
+        limit,
       },
-    });
-
-    const friendIds = currentUser?.friends.map((friend) => friend.id) || [];
-
-    // Add the isFriend field to each player
-    const playersWithFriendStatus = players.map((player) => ({
-      ...player,
-      isFriend: friendIds.includes(player.id),
-      _count: undefined, // Remove _count from the response
-      friendsCount: player._count.friends, // Replace with friendsCount
-    }));
-
-    return NextResponse.json({
-      players: playersWithFriendStatus,
-      totalCount,
-      page,
-      totalPages: Math.ceil(totalCount / limit),
-    });
+    };
   } catch (error) {
-    console.error("[GET_PLAYERS]", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("[FIND_PLAYERS]", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to find players",
+    };
   }
 }

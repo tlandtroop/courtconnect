@@ -1,19 +1,15 @@
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/";
+"use server";
 
+import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import db from "@/lib/db";
 
-// Add a friend
-export async function POST(
-  request: Request,
-  { params }: { params: { friendId: string } }
-) {
+export async function addFriend(friendId: string) {
   try {
-    const { userId } = auth();
-    const { friendId } = params;
+    const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return { success: false, error: "Unauthorized" };
     }
 
     // Find the user in our database
@@ -22,7 +18,7 @@ export async function POST(
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return { success: false, error: "User not found" };
     }
 
     // Find the friend
@@ -31,15 +27,12 @@ export async function POST(
     });
 
     if (!friend) {
-      return NextResponse.json({ error: "Friend not found" }, { status: 404 });
+      return { success: false, error: "Friend not found" };
     }
 
     // Can't add yourself as a friend
     if (user.id === friend.id) {
-      return NextResponse.json(
-        { error: "Cannot add yourself as a friend" },
-        { status: 400 }
-      );
+      return { success: false, error: "Cannot add yourself as a friend" };
     }
 
     // Check if already friends
@@ -55,10 +48,7 @@ export async function POST(
     });
 
     if (alreadyFriends) {
-      return NextResponse.json(
-        { error: "Already friends with this user" },
-        { status: 400 }
-      );
+      return { success: false, error: "Already friends with this user" };
     }
 
     // Add friend relationship (bidirectional)
@@ -80,27 +70,26 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ success: true });
+    // Revalidate paths
+    revalidatePath(`/profile/${userId}`);
+    revalidatePath(`/profile/${friend.clerkId}`);
+
+    return { success: true };
   } catch (error) {
     console.error("[ADD_FRIEND]", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to add friend",
+    };
   }
 }
 
-// Remove a friend
-export async function DELETE(
-  request: Request,
-  { params }: { params: { friendId: string } }
-) {
+export async function removeFriend(friendId: string) {
   try {
-    const { userId } = auth();
-    const { friendId } = params;
+    const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return { success: false, error: "Unauthorized" };
     }
 
     // Find the user in our database
@@ -109,7 +98,7 @@ export async function DELETE(
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return { success: false, error: "User not found" };
     }
 
     // Find the friend
@@ -118,7 +107,23 @@ export async function DELETE(
     });
 
     if (!friend) {
-      return NextResponse.json({ error: "Friend not found" }, { status: 404 });
+      return { success: false, error: "Friend not found" };
+    }
+
+    // Check if actually friends
+    const areFriends = await db.user.findFirst({
+      where: {
+        id: user.id,
+        friends: {
+          some: {
+            id: friend.id,
+          },
+        },
+      },
+    });
+
+    if (!areFriends) {
+      return { success: false, error: "Not friends with this user" };
     }
 
     // Remove friend relationship (bidirectional)
@@ -140,12 +145,16 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({ success: true });
+    // Revalidate paths
+    revalidatePath(`/profile/${userId}`);
+    revalidatePath(`/profile/${friend.clerkId}`);
+
+    return { success: true };
   } catch (error) {
     console.error("[REMOVE_FRIEND]", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to remove friend",
+    };
   }
 }

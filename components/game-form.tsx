@@ -26,6 +26,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 
+// Import server action
+import { createGame } from "@/actions/games/index";
+
 const GameForm = () => {
   const [courtId, setCourtId] = useState<string>("1");
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -59,35 +62,30 @@ const GameForm = () => {
     // Format date and time for API
     const formattedDate = format(date, "yyyy-MM-dd");
 
-    const gameData = {
-      courtId,
-      date: formattedDate,
-      startTime: time,
-      gameType,
-      skillLevel,
-      playersNeeded,
-      notes,
-    };
-
     try {
-      // Send data to API route to create a new game
-      const response = await fetch("/api/create-game", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(gameData),
+      // Call server action to create a game
+      const result = await createGame({
+        courtId,
+        date: formattedDate,
+        startTime: time,
+        gameType,
+        skillLevel,
+        playersNeeded,
+        notes,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create game");
-      } else {
-        toast("Game Created", {
-          description: "A game has been created successfully",
-        });
-
-        // Reset form or redirect here if needed
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create game");
       }
+
+      toast("Game Created", {
+        description: "A game has been created successfully",
+      });
+
+      // Reset form or redirect here if needed
+      setDate(undefined);
+      setTime("");
+      setNotes("");
     } catch (error) {
       console.error("Error:", error);
       setError("Error creating game");

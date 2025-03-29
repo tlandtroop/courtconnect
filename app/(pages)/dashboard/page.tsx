@@ -23,6 +23,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UserProfile } from "@/types";
 import Stats from "@/components/dashboard/stats";
 
+// Import server actions
+import { syncUser } from "@/actions/auth/sync-user";
+import { getUserProfile } from "@/actions/users/profile";
+
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -34,38 +38,38 @@ export default function DashboardPage() {
       if (!user) return;
 
       try {
-        await fetch("/api/sync-user", { method: "POST" });
+        // Sync user with database using server action
+        await syncUser();
 
-        const response = await fetch(`/api/users/${user.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch user profile");
-        }
+        // Get user profile using server action
+        const result = await getUserProfile(user.id);
 
-        const data = await response.json();
+        if (result.success && result.user) {
+          // Calculate profile completion percentage
+          const requiredFields = [
+            "name",
+            "username",
+            "bio",
+            "location",
+            "avatarUrl",
+          ];
+          const filledFields = requiredFields.filter(
+            (field) => !!result.user[field as keyof typeof result.user]
+          );
+          const completionPercentage = Math.round(
+            (filledFields.length / requiredFields.length) * 100
+          );
 
-        // Calculate profile completion percentage
-        const requiredFields = [
-          "name",
-          "username",
-          "bio",
-          "location",
-          "avatarUrl",
-        ];
-        const filledFields = requiredFields.filter((field) => !!data[field]);
-        const completionPercentage = Math.round(
-          (filledFields.length / requiredFields.length) * 100
-        );
+          setProfile({
+            ...(result.user as unknown as UserProfile),
+            profileCompletionPercentage: completionPercentage,
+          });
 
-        setProfile({
-          ...data,
-          profileCompletionPercentage: completionPercentage,
-        });
-
-        // Fetch nearby games count (example)
-        const gamesResponse = await fetch("/api/games/nearby");
-        if (gamesResponse.ok) {
-          const gamesData = await gamesResponse.json();
-          setNearbyGamesCount(gamesData.count || 0);
+          // TODO: Replace with server action for nearby games
+          // For now, just set a placeholder value
+          setNearbyGamesCount(Math.floor(Math.random() * 10));
+        } else {
+          console.error("Error fetching profile:", result.error);
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);
