@@ -103,7 +103,6 @@ export default function ProfileEditDialog({
     }
 
     try {
-      // Call server action to update user profile
       const result = await updateUserProfile(userId, formData);
 
       if (result.success) {
@@ -111,10 +110,7 @@ export default function ProfileEditDialog({
           description: "Your profile has been successfully updated.",
         });
 
-        // Notify parent that profile was updated
         onProfileUpdated();
-
-        // Close the dialog
         onClose();
       } else {
         throw new Error(result.error || "Failed to update profile");

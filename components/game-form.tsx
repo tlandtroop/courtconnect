@@ -44,7 +44,6 @@ const GameForm = () => {
     e.preventDefault();
     setError("");
 
-    // Check if required fields are filled
     if (
       !courtId ||
       !date ||
@@ -59,11 +58,9 @@ const GameForm = () => {
 
     setIsSubmitting(true);
 
-    // Format date and time for API
     const formattedDate = format(date, "yyyy-MM-dd");
 
     try {
-      // Call server action to create a game
       const result = await createGame({
         courtId,
         date: formattedDate,

@@ -21,9 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserProfile } from "@/types";
-import Stats from "@/components/dashboard/stats";
+import Stats from "@/components/shared/stats";
 
-// Import server actions
 import { syncUser } from "@/actions/auth/sync-user";
 import { getUserProfile } from "@/actions/users/profile";
 
