@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -16,29 +16,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getCourts } from "@/actions/courts";
+import { createGame } from "@/actions/games/index";
+import { Court } from "@/types";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
-import { TimePickerInput } from "@/components/ui/time-picker-input";
-
-// Import server action
-import { createGame } from "@/actions/games/index";
 
 const GameForm = () => {
   const [courtId, setCourtId] = useState<string>("1");
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [time, setTime] = useState<string>("");
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [time, setTime] = useState<string>("14:00"); // Default to 2:00 PM
   const [gameType, setGameType] = useState<string>("Pickleball - Doubles");
   const [skillLevel, setSkillLevel] = useState<string>("All Levels Welcome");
   const [playersNeeded, setPlayersNeeded] = useState<number>(4);
   const [notes, setNotes] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [loadingCourts, setLoadingCourts] = useState(true);
+
+  useEffect(() => {
+    const fetchCourts = async () => {
+      try {
+        const result = await getCourts();
+        if (result.success && result.courts) {
+          setCourts(result.courts as Court[]);
+          // Set default court ID if courts are available
+          if (result.courts.length > 0) {
+            setCourtId(result.courts[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching courts:", error);
+      } finally {
+        setLoadingCourts(false);
+      }
+    };
+
+    fetchCourts();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,36 +127,42 @@ const GameForm = () => {
           {/* Court Selection */}
           <div>
             <Label className="text-sm font-medium mb-2">Select Court</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-              {[1, 2].map((court) => (
-                <div
-                  key={court}
-                  className={`border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors ${
-                    courtId === court.toString()
-                      ? "border-blue-500 bg-blue-50"
-                      : ""
-                  }`}
-                  onClick={() => setCourtId(court.toString())}
-                >
-                  <div className="flex gap-4">
-                    <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
-                      Court
-                    </div>
-                    <div>
-                      <div className="font-medium">Court Name #{court}</div>
-                      <div className="text-sm text-gray-500">
-                        2.3 miles away
+            {loadingCourts ? (
+              <div className="text-center py-4">Loading courts...</div>
+            ) : courts.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                No courts available.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                {courts.map((court) => (
+                  <div
+                    key={court.id}
+                    className={`border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors ${
+                      courtId === court.id ? "border-blue-500 bg-blue-50" : ""
+                    }`}
+                    onClick={() => setCourtId(court.id)}
+                  >
+                    <div className="flex gap-4">
+                      <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                        Court
                       </div>
-                      <div className="mt-2 flex gap-2">
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                          Available
-                        </span>
+                      <div>
+                        <div className="font-medium">{court.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {court.city}, {court.state}
+                        </div>
+                        <div className="mt-2 flex gap-2">
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                            Available
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Date and Time */}
@@ -144,7 +173,7 @@ const GameForm = () => {
                 <PopoverTrigger asChild>
                   <Button
                     id="date"
-                    variant={"outline"}
+                    variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !date && "text-muted-foreground"
@@ -154,24 +183,35 @@ const GameForm = () => {
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={setDate}
+                    onSelect={(newDate: Date | undefined) => setDate(newDate)}
                     initialFocus
-                    disabled={(date) =>
-                      date < new Date(new Date().setHours(0, 0, 0, 0))
-                    }
+                    disabled={(date) => date < new Date()}
                   />
                 </PopoverContent>
               </Popover>
             </div>
             <div className="space-y-2">
               <Label htmlFor="time">Time</Label>
-              <div className="flex items-center space-x-2">
-                <TimePickerInput setTime={setTime} className="w-full" />
-              </div>
+              <Select value={time} onValueChange={setTime}>
+                <SelectTrigger id="time">
+                  <SelectValue placeholder="Select a time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 13 }, (_, i) => i + 7).map((hour) => (
+                    <SelectItem key={hour} value={`${hour}:00`}>
+                      {hour > 12
+                        ? `${hour - 12}:00 PM`
+                        : hour === 12
+                        ? "12:00 PM"
+                        : `${hour}:00 AM`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

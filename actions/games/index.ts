@@ -36,7 +36,6 @@ export async function getGames({
 
     const skip = (page - 1) * limit;
 
-    // Base query to find games
     const query: any = {
       where: {},
       include: {
@@ -270,6 +269,89 @@ export async function createGame({
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to create game",
+    };
+  }
+}
+
+export async function getUpcomingGames() {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Find the user in our database
+    const user = await db.user.findUnique({
+      where: { clerkId: userId },
+    });
+
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    const today = new Date();
+
+    // Get upcoming games (today and future dates)
+    const games = await db.game.findMany({
+      where: {
+        date: {
+          gte: today,
+        },
+        status: "scheduled",
+      },
+      include: {
+        court: true,
+        organizer: {
+          select: {
+            id: true,
+            clerkId: true,
+            name: true,
+            username: true,
+            avatarUrl: true,
+            rating: true,
+          },
+        },
+        participants: {
+          select: {
+            id: true,
+            clerkId: true,
+            name: true,
+            username: true,
+            avatarUrl: true,
+            rating: true,
+          },
+        },
+      },
+      orderBy: {
+        date: "asc",
+      },
+      take: 8,
+    });
+
+    // Format the games to match the expected type
+    const formattedGames = games.map((game) => ({
+      id: game.id,
+      gameType: game.gameType,
+      skillLevel: game.skillLevel,
+      date: game.date.toISOString(),
+      startTime: game.startTime.toISOString(),
+      playersNeeded: game.playersNeeded,
+      notes: game.notes || undefined,
+      participants: game.participants,
+      organizer: game.organizer,
+      court: game.court,
+    }));
+
+    return { success: true, games: formattedGames };
+  } catch (error) {
+    console.error("[GET_UPCOMING_GAMES]", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch upcoming games",
     };
   }
 }
