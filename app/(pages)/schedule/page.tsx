@@ -1,10 +1,16 @@
+"use client";
+
 import React from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/navbar";
 import GameForm from "@/components/game-form";
 import CourtAvailability from "@/components/court-availability";
 import WeatherForecast from "@/components/weather-forecast";
 
 export default function SchedulePage() {
+  const searchParams = useSearchParams();
+  const courtId = searchParams.get("courtId") || undefined;
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navigation Bar - Consistent across pages */}
@@ -14,7 +20,7 @@ export default function SchedulePage() {
         <div className="grid grid-cols-12 gap-6">
           {/* Create Game Form */}
           <div className="col-span-8">
-            <GameForm />
+            <GameForm preselectedCourtId={courtId} />
           </div>
           {/* Right Sidebar - Available Times */}
           <div className="col-span-4 space-y-6">

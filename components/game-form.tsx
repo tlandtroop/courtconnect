@@ -29,8 +29,12 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
-const GameForm = () => {
-  const [courtId, setCourtId] = useState<string>("1");
+interface GameFormProps {
+  preselectedCourtId?: string;
+}
+
+const GameForm = ({ preselectedCourtId }: GameFormProps) => {
+  const [courtId, setCourtId] = useState<string>(preselectedCourtId || "1");
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>("14:00"); // Default to 2:00 PM
   const [gameType, setGameType] = useState<string>("Pickleball - Doubles");
@@ -48,8 +52,8 @@ const GameForm = () => {
         const result = await getCourts();
         if (result.success && result.courts) {
           setCourts(result.courts as Court[]);
-          // Set default court ID if courts are available
-          if (result.courts.length > 0) {
+          // Set default court ID if courts are available and no preselectedCourtId was provided
+          if (result.courts.length > 0 && !preselectedCourtId) {
             setCourtId(result.courts[0].id);
           }
         }
@@ -61,7 +65,7 @@ const GameForm = () => {
     };
 
     fetchCourts();
-  }, []);
+  }, [preselectedCourtId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
