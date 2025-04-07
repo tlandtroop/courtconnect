@@ -4,16 +4,16 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
-import ProfileEditDialog from "@/components/profile/profile-edit-dialog";
+import ProfileEditDialog from "@/app/(pages)/profile/_components/profile-edit-dialog";
 import { getUserProfile } from "@/actions/users/profile";
 import PlayerStats from "@/components/stats";
-import Friends from "@/components/profile/friends";
-import FavoriteCourts from "@/components/profile/favorite-courts";
-import Games from "@/components/profile/games";
+import Friends from "@/app/(pages)/profile/_components/friends";
+import FavoriteCourts from "@/app/(pages)/profile/_components/favorite-courts";
+import Games from "@/app/(pages)/profile/_components/games";
 import { UserProfile } from "@/types";
-import ProfileLoader from "@/components/profile/loader";
-import ProfileNotFound from "@/components/profile/not-found";
-import ProfileInfo from "@/components/profile/profile-info";
+import ProfileLoader from "@/app/(pages)/profile/_components/loader";
+import ProfileNotFound from "@/app/(pages)/profile/_components/not-found";
+import ProfileInfo from "@/app/(pages)/profile/_components/profile-info";
 
 export default function ProfilePage() {
   const params = useParams();

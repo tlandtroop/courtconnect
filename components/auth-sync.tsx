@@ -11,7 +11,6 @@ export default function AuthSync() {
     const performSync = async () => {
       if (isLoaded && isSignedIn && userId) {
         try {
-          // We'll keep this call here, but make it more efficient
           const result = await syncUser();
 
           if (!result.success) {
