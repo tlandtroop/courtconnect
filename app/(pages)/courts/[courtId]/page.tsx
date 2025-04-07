@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import { getCourt } from "@/actions/courts/court";
-import Navbar from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -100,7 +99,6 @@ export default function CourtDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Navbar />
         <div className="max-w-7xl mx-auto px-8 py-12">
           <div className="flex items-center justify-center h-64">
             <p className="text-gray-500">Loading court details...</p>
@@ -113,7 +111,6 @@ export default function CourtDetailPage() {
   if (error || !court) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Navbar />
         <div className="max-w-7xl mx-auto px-8 py-12">
           <div className="flex flex-col items-center justify-center h-64">
             <p className="text-red-500">{error || "Court not found"}</p>
@@ -130,7 +127,6 @@ export default function CourtDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar />
       <div className="max-w-7xl mx-auto px-8 py-6">
         {/* Breadcrumb */}
         <div className="flex items-center text-sm text-gray-500 mb-6">

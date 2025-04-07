@@ -5,11 +5,9 @@ import { useUser } from "@clerk/nextjs";
 import { Calendar, CheckCircle, MapPin, Users, Award } from "lucide-react";
 import Link from "next/link";
 
-import Navbar from "@/components/navbar";
-import UpcomingGames from "@/components/dashboard/upcoming-games";
-import Weather from "@/components/dashboard/weather";
-import RecentActivity from "@/components/dashboard/recent-activity";
-import DashboardGoogleMaps from "@/components/dashboard/google-maps";
+import FeaturedCourts from "@/app/(pages)/dashboard/_components/featured-courts";
+import PlayerRecommendations from "@/app/(pages)/dashboard/_components/player-recommendations";
+import GameFinder from "@/app/(pages)/dashboard/_components/game-finder";
 import {
   Card,
   CardContent,
@@ -22,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserProfile } from "@/types";
 import Stats from "@/components/shared/stats";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 import { syncUser } from "@/actions/auth/sync-user";
 import { getUserProfile } from "@/actions/users/profile";
@@ -30,7 +29,9 @@ export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [nearbyGamesCount, setNearbyGamesCount] = useState(0);
+  const [profileCompletionPercentage, setProfileCompletionPercentage] =
+    useState(0);
+  const [activeTab, setActiveTab] = useState("games");
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -45,6 +46,7 @@ export default function DashboardPage() {
 
         if (result.success && result.user) {
           // Calculate profile completion percentage
+          const userProfile = result.user as unknown as UserProfile;
           const requiredFields = [
             "name",
             "username",
@@ -53,20 +55,14 @@ export default function DashboardPage() {
             "avatarUrl",
           ];
           const filledFields = requiredFields.filter(
-            (field) => !!result.user[field as keyof typeof result.user]
+            (field) => !!userProfile[field as keyof UserProfile]
           );
           const completionPercentage = Math.round(
             (filledFields.length / requiredFields.length) * 100
           );
 
-          setProfile({
-            ...(result.user as unknown as UserProfile),
-            profileCompletionPercentage: completionPercentage,
-          });
-
-          // TODO: Replace with server action for nearby games
-          // For now, just set a placeholder value
-          setNearbyGamesCount(Math.floor(Math.random() * 10));
+          setProfileCompletionPercentage(completionPercentage);
+          setProfile(userProfile);
         } else {
           console.error("Error fetching profile:", result.error);
         }
@@ -91,7 +87,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Welcome Header */}
         <div className="mb-8">
@@ -126,12 +121,40 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Profile completion only if incomplete */}
+              {profileCompletionPercentage < 100 && (
+                <Card className="w-full md:w-auto bg-blue-50 border-blue-100">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-medium">Complete Your Profile</h3>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-600 rounded-full"
+                          style={{ width: `${profileCompletionPercentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm">
+                        {profileCompletionPercentage}%
+                      </span>
+                      <Link href={`/profile/${user?.id}`}>
+                        <Button size="sm" variant="outline">
+                          Complete
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Link href="/schedule" className="block">
             <Card className="hover:shadow-md transition-shadow">
               <CardContent className="p-4 flex items-center gap-3">
@@ -191,84 +214,70 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Column - 8/12 width */}
-          <div className="col-span-12 lg:col-span-8 space-y-6">
-            {/* Profile Completion Card (shown only if profile is incomplete) */}
-            {profile && profile.profileCompletionPercentage !== 100 && (
-              <Card className="bg-blue-50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-600" />
-                    Complete Your Profile
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-2">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Profile completion</span>
-                      <span>{profile.profileCompletionPercentage}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        className="bg-blue-600 h-2.5 rounded-full"
-                        style={{
-                          width: `${profile.profileCompletionPercentage}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="text-sm">
-                    Complete your profile to help others find you and match with
-                    players of similar skill levels.
-                  </div>
-                  <div className="mt-3">
-                    <Link href={`/profile/${user?.id}`}>
-                      <Button variant="outline" size="sm">
-                        Complete Profile
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+        {/* Main Content */}
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
+          <TabsList className="mb-4">
+            <TabsTrigger value="games">Games</TabsTrigger>
+            <TabsTrigger value="courts">Courts</TabsTrigger>
+            <TabsTrigger value="players">Players</TabsTrigger>
+          </TabsList>
 
-            {/* Map with Nearby Courts */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center justify-between">
-                  <span>Courts Near You</span>
-                  <Link href="/courts">
-                    <Button variant="outline">View All</Button>
-                  </Link>
-                </CardTitle>
-                <CardDescription>
-                  {nearbyGamesCount > 0
-                    ? `${nearbyGamesCount} games scheduled nearby`
-                    : "Explore pickleball courts in your area"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <DashboardGoogleMaps />
-              </CardContent>
-            </Card>
+          <TabsContent value="games" className="space-y-6">
+            <div className="grid grid-cols-12 gap-6">
+              {/* Left Column - Game Finder */}
+              <div className="col-span-12 lg:col-span-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Find Games Near You</CardTitle>
+                    <CardDescription>
+                      Browse and join upcoming games
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <GameFinder />
+                  </CardContent>
+                </Card>
+              </div>
 
-            {/* Upcoming Games */}
-            <UpcomingGames />
-          </div>
+              {/* Right Column - Player Stats and Weather */}
+              <div className="col-span-12 lg:col-span-4 space-y-6">
+                {profile && <Stats profile={profile} />}
+              </div>
+            </div>
+          </TabsContent>
 
-          {/* Right Column - 4/12 width */}
-          <div className="col-span-12 lg:col-span-4 space-y-6">
-            {/* Player Stats Card */}
-            {profile && <Stats profile={profile} />}
+          <TabsContent value="courts" className="space-y-6">
+            <div className="grid grid-cols-12 gap-6">
+              {/* Left Column - Featured Courts */}
+              <div className="col-span-12 lg:col-span-8">
+                <FeaturedCourts />
+              </div>
 
-            {/* Weather Widget */}
-            <Weather />
+              {/* Right Column */}
+              <div className="col-span-12 lg:col-span-4 space-y-6">
+                {profile && <Stats profile={profile} />}
+              </div>
+            </div>
+          </TabsContent>
 
-            {/* Recent Activity */}
-            <RecentActivity />
-          </div>
-        </div>
+          <TabsContent value="players" className="space-y-6">
+            <div className="grid grid-cols-12 gap-6">
+              {/* Left Column */}
+              <div className="col-span-12 lg:col-span-8">
+                <PlayerRecommendations />
+              </div>
+
+              {/* Right Column */}
+              <div className="col-span-12 lg:col-span-4 space-y-6">
+                {profile && <Stats profile={profile} />}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

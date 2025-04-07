@@ -122,27 +122,23 @@ export async function getGames({
       }
     }
 
-    // Filter games that still have open spots
-    if (hasSpots) {
-      query.where.participants = {
-        _count: {
-          lt: db.game.fields.playersNeeded,
-        },
-      };
-    }
-
-    // Execute count query for pagination
-    const totalGamesCount = await db.game.count({
-      where: query.where,
-    });
-
-    // Execute the main query
+    // Execute the main query without the hasSpots filter
     const games = await db.game.findMany(query);
 
-    // Format response with pagination info
+    // Filter games with available spots in JavaScript
+    let filteredGames = games;
+    if (hasSpots) {
+      filteredGames = games.filter(
+        (game) => game._count.participants < game.playersNeeded
+      );
+    }
+
+    // Count total after filtering
+    const totalGamesCount = filteredGames.length;
+
     return {
       success: true,
-      games,
+      games: filteredGames,
       pagination: {
         total: totalGamesCount,
         page,

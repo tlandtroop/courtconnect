@@ -16,7 +16,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-import Navbar from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -221,7 +220,6 @@ export default function GameDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center min-h-[60vh]">
             <div className="flex flex-col items-center gap-2">
@@ -237,7 +235,6 @@ export default function GameDetailPage() {
   if (!game) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center min-h-[60vh]">
             <div className="text-center">
@@ -260,8 +257,6 @@ export default function GameDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar />
-
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Back Button */}
         <div className="mb-6">

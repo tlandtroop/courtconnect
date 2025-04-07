@@ -41,7 +41,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import Navbar from "@/components/navbar";
 import { toast } from "sonner";
 import { findPlayers } from "@/actions/players/index";
 import { addFriend } from "@/actions/users/friends";
@@ -224,7 +223,6 @@ export default function PlayersPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
           <h1 className="text-2xl font-bold mb-4 sm:mb-0">Find Players</h1>

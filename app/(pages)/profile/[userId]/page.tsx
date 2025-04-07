@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
-import Navbar from "@/components/navbar";
 import ProfileEditDialog from "@/components/profile/profile-edit-dialog";
 import { getUserProfile } from "@/actions/users/profile";
 import PlayerStats from "@/components/shared/stats";
@@ -59,7 +58,6 @@ export default function ProfilePage() {
   if (!isLoaded || loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Navbar />
         <ProfileLoader />
       </div>
     );
@@ -68,7 +66,6 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Navbar />
         <ProfileNotFound />
       </div>
     );
@@ -76,8 +73,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ProfileInfo
           profile={profile}
