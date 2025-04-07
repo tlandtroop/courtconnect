@@ -7,7 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, MapPin } from "lucide-react";
-import { getGames, getUpcomingGames } from "@/actions/games";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getUserGames } from "@/actions/games";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -21,6 +27,7 @@ export default function GamesPage() {
   const [myGames, setMyGames] = useState<Game[]>([]);
   const [gameHistory, setGameHistory] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<"date" | "players" | "skill">("date");
 
   useEffect(() => {
     if (isLoaded && user && activeTab === "my-games") {
@@ -115,12 +122,30 @@ export default function GamesPage() {
               <TabsTrigger value="my-games">My Games</TabsTrigger>
             </TabsList>
 
-            <Link href="/schedule">
-              <Button>
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Game
-              </Button>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <Select
+                value={sortBy}
+                onValueChange={(value) =>
+                  setSortBy(value as "date" | "players" | "skill")
+                }
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Date (Soonest)</SelectItem>
+                  <SelectItem value="players">Available Spots</SelectItem>
+                  <SelectItem value="skill">Skill Level</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Link href="/schedule">
+                <Button variant="outline">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule Game
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <TabsContent value="find" className="space-y-4">
@@ -142,7 +167,6 @@ export default function GamesPage() {
               <div className="space-y-8">
                 {/* Upcoming Games */}
                 <div>
-                  <h2 className="text-lg font-medium mb-4">Upcoming Games</h2>
                   {upcomingGames.length === 0 ? (
                     <Card>
                       <CardContent className="p-6 text-center">

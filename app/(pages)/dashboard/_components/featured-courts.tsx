@@ -38,7 +38,12 @@ const FeaturedCourts = () => {
             });
 
             if (gamesResult.success && gamesResult.games) {
-              gamesData[court.id] = gamesResult.games as unknown as Game[];
+              // Filter games to only include upcoming games (today or in the future)
+              const games = gamesResult.games as unknown as Game[];
+              const upcomingGames = games.filter((game) =>
+                isDateTodayOrFuture(game.date)
+              );
+              gamesData[court.id] = upcomingGames;
             }
           }
 
@@ -53,6 +58,90 @@ const FeaturedCourts = () => {
 
     fetchCourtsAndGames();
   }, []);
+
+  // Helper function to check if a date is today or in the future
+  const isDateTodayOrFuture = (dateString: string) => {
+    try {
+      // Log the date for debugging
+      console.log("Checking date:", dateString);
+
+      // Get the date parts only (no time, no timezone)
+      const gameDate = new Date(dateString);
+      const today = new Date();
+
+      // Create date strings in YYYY-MM-DD format
+      const gameDateStr = `${gameDate.getFullYear()}-${String(
+        gameDate.getMonth() + 1
+      ).padStart(2, "0")}-${String(gameDate.getDate()).padStart(2, "0")}`;
+      const todayStr = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+      // Log the comparison values
+      console.log(`Comparing: Game date ${gameDateStr} >= Today ${todayStr}`);
+
+      // Simple string comparison works reliably for YYYY-MM-DD format
+      return gameDateStr >= todayStr;
+    } catch (error) {
+      console.error("Date comparison error:", error, "for date:", dateString);
+      return false;
+    }
+  };
+
+  // Check if a date is today
+  const isToday = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const today = new Date();
+
+      return (
+        date.getDate() === today.getDate() &&
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear()
+      );
+    } catch (error) {
+      console.error("Date comparison error:", error);
+      return false;
+    }
+  };
+
+  const formatGameDate = (dateString: string) => {
+    try {
+      if (isToday(dateString)) {
+        return "Today";
+      }
+
+      const date = new Date(dateString);
+      const today = new Date();
+
+      // Check if it's tomorrow
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+
+      if (
+        date.getDate() === tomorrow.getDate() &&
+        date.getMonth() === tomorrow.getMonth() &&
+        date.getFullYear() === tomorrow.getFullYear()
+      ) {
+        return "Tomorrow";
+      }
+
+      return format(date, "MMM d");
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "Invalid date";
+    }
+  };
+
+  const formatGameTime = (timeString: string) => {
+    try {
+      const time = new Date(timeString);
+      return format(time, "h:mm a");
+    } catch (error) {
+      console.error("Time formatting error:", error);
+      return "Invalid time";
+    }
+  };
 
   if (loading) {
     return (
@@ -77,14 +166,6 @@ const FeaturedCourts = () => {
       </Card>
     );
   }
-
-  const formatGameDate = (date: string) => {
-    return format(new Date(date), "MMM d");
-  };
-
-  const formatGameTime = (time: string) => {
-    return format(new Date(time), "h:mm a");
-  };
 
   return (
     <Card>

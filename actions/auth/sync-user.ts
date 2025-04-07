@@ -16,22 +16,18 @@ export async function syncUser() {
     // Check if user already exists in our database
     const existingUser = await db.user.findUnique({
       where: { clerkId: userId },
+      select: {
+        id: true,
+        name: true,
+        avatarUrl: true,
+        updatedAt: true, // Add this field to your user model if not present
+      },
     });
 
-    if (existingUser) {
-      // User exists, just update their information if needed
-      const updatedUser = await db.user.update({
-        where: { clerkId: userId },
-        data: {
-          name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-          avatarUrl: user.imageUrl,
-        },
-      });
-
-      revalidatePath(`/profile/${userId}`);
-      revalidatePath("/dashboard");
-
-      return { success: true, user: updatedUser };
+    // If user exists and was updated recently (e.g., within the last hour), skip sync
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (existingUser && existingUser.updatedAt > oneHourAgo) {
+      return { success: true, user: existingUser };
     }
 
     // Create a new user in our database

@@ -4,13 +4,7 @@ import { Calendar, MapPin, Users, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,12 +15,14 @@ interface GameFinderProps {
   initialCourtId?: string;
   initialSkillLevel?: string;
   initialGameType?: string;
+  initialSortBy?: "date" | "players" | "skill";
 }
 
 const GameFinder: React.FC<GameFinderProps> = ({
   initialCourtId,
   initialSkillLevel,
   initialGameType,
+  initialSortBy,
 }) => {
   const router = useRouter();
   const [games, setGames] = useState<Game[]>([]);
@@ -36,7 +32,7 @@ const GameFinder: React.FC<GameFinderProps> = ({
   const [skillLevel, setSkillLevel] = useState(initialSkillLevel || "");
   const [hasSpots, setHasSpots] = useState(true);
   const [upcoming, setUpcoming] = useState(true);
-  const [sortBy, setSortBy] = useState<"date" | "players" | "skill">("date");
+
   const [showFilters, setShowFilters] = useState(false);
 
   // Pagination
@@ -45,7 +41,7 @@ const GameFinder: React.FC<GameFinderProps> = ({
 
   useEffect(() => {
     fetchGames();
-  }, [courtId, gameType, skillLevel, hasSpots, upcoming, page, sortBy]);
+  }, [courtId, gameType, skillLevel, hasSpots, upcoming, page, initialSortBy]);
 
   const fetchGames = async () => {
     setLoading(true);
@@ -61,8 +57,19 @@ const GameFinder: React.FC<GameFinderProps> = ({
       });
 
       if (result.success && result.games) {
-        setGames(result.games as unknown as Game[]);
-        setTotalPages(result.pagination?.pages || 1);
+        // Additional filtering to ensure only upcoming games (today or future) are shown
+        const allGames = result.games as unknown as Game[];
+        const filteredGames = allGames.filter((game) =>
+          isDateTodayOrFuture(game.date)
+        );
+
+        // For debugging
+        console.log(
+          `Fetched ${allGames.length} games, filtered to ${filteredGames.length} upcoming games`
+        );
+
+        setGames(filteredGames);
+        setTotalPages(Math.ceil(filteredGames.length / 5) || 1);
       } else {
         console.error("Error fetching games:", result.error);
       }
@@ -70,6 +77,32 @@ const GameFinder: React.FC<GameFinderProps> = ({
       console.error("Error fetching games:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helper function to check if a date is today or in the future
+  const isDateTodayOrFuture = (dateString: string) => {
+    try {
+      const gameDate = new Date(dateString);
+      const today = new Date();
+
+      // Remove time components for comparison
+      const gameDateOnly = new Date(
+        gameDate.getFullYear(),
+        gameDate.getMonth(),
+        gameDate.getDate()
+      );
+
+      const todayOnly = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+
+      return gameDateOnly >= todayOnly;
+    } catch (error) {
+      console.error("Date comparison error:", error);
+      return false;
     }
   };
 
@@ -85,158 +118,62 @@ const GameFinder: React.FC<GameFinderProps> = ({
     setUpcoming(true);
   };
 
-  const formatGameDate = (date: string) => {
-    const gameDate = new Date(date);
-    const today = new Date();
+  const formatGameDate = (dateString: string) => {
+    try {
+      const gameDate = new Date(dateString);
+      const today = new Date();
 
-    if (
-      gameDate.getDate() === today.getDate() &&
-      gameDate.getMonth() === today.getMonth() &&
-      gameDate.getFullYear() === today.getFullYear()
-    ) {
-      return "Today";
+      // Compare dates without time components
+      const gameDateOnly = new Date(
+        gameDate.getFullYear(),
+        gameDate.getMonth(),
+        gameDate.getDate()
+      );
+
+      const todayOnly = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+
+      // Check if it's today
+      if (gameDateOnly.getTime() === todayOnly.getTime()) {
+        return "Today";
+      }
+
+      // Check if it's tomorrow
+      const tomorrow = new Date(todayOnly);
+      tomorrow.setDate(today.getDate() + 1);
+
+      if (
+        gameDateOnly.getTime() ===
+        new Date(
+          tomorrow.getFullYear(),
+          tomorrow.getMonth(),
+          tomorrow.getDate()
+        ).getTime()
+      ) {
+        return "Tomorrow";
+      }
+
+      return format(gameDate, "MMM d");
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "Invalid date";
     }
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    if (
-      gameDate.getDate() === tomorrow.getDate() &&
-      gameDate.getMonth() === tomorrow.getMonth() &&
-      gameDate.getFullYear() === tomorrow.getFullYear()
-    ) {
-      return "Tomorrow";
-    }
-
-    return format(gameDate, "MMM d");
   };
 
-  const formatGameTime = (time: string) => {
-    return format(new Date(time), "h:mm a");
+  const formatGameTime = (timeString: string) => {
+    try {
+      return format(new Date(timeString), "h:mm a");
+    } catch (error) {
+      console.error("Time formatting error:", error);
+      return "Invalid time";
+    }
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex gap-2 items-center">
-          <h2 className="text-xl font-semibold">Find Games</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          <Select
-            value={sortBy}
-            onValueChange={(value) =>
-              setSortBy(value as "date" | "players" | "skill")
-            }
-          >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date">Date (Soonest)</SelectItem>
-              <SelectItem value="players">Available Spots</SelectItem>
-              <SelectItem value="skill">Skill Level</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={() => router.push("/schedule")} size="sm">
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule
-          </Button>
-        </div>
-      </div>
-
-      {showFilters && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Game Type
-                </label>
-                <Select value={gameType} onValueChange={setGameType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All game types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All game types</SelectItem>
-                    <SelectItem value="Pickleball - Singles">
-                      Pickleball - Singles
-                    </SelectItem>
-                    <SelectItem value="Pickleball - Doubles">
-                      Pickleball - Doubles
-                    </SelectItem>
-                    <SelectItem value="Basketball - 3v3">
-                      Basketball - 3v3
-                    </SelectItem>
-                    <SelectItem value="Basketball - 5v5">
-                      Basketball - 5v5
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Skill Level
-                </label>
-                <Select value={skillLevel} onValueChange={setSkillLevel}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All skill levels" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All skill levels</SelectItem>
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
-                    <SelectItem value="All Levels Welcome">
-                      All Levels Welcome
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col justify-end">
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={hasSpots}
-                      onChange={(e) => setHasSpots(e.target.checked)}
-                      className="rounded text-blue-600"
-                    />
-                    Has open spots
-                  </label>
-
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={upcoming}
-                      onChange={(e) => setUpcoming(e.target.checked)}
-                      className="rounded text-blue-600"
-                    />
-                    Upcoming only
-                  </label>
-                </div>
-
-                <Button
-                  variant="link"
-                  onClick={clearFilters}
-                  className="self-end mt-2 h-8 px-0"
-                >
-                  Clear filters
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {loading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (

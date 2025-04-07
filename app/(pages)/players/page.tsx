@@ -150,15 +150,15 @@ export default function PlayersPage() {
   const getSkillLevelColor = (skillLevel: string) => {
     switch (skillLevel) {
       case "beginner":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 hover:bg-green-200";
       case "intermediate":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
       case "advanced":
-        return "bg-purple-100 text-purple-800";
+        return "bg-purple-100 text-purple-800 hover:bg-purple-200";
       case "expert":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 hover:bg-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
 
@@ -372,7 +372,7 @@ export default function PlayersPage() {
           ) : (
             players.map((player) => (
               <Link href={`/profile/${player.clerkId}`} key={player.id}>
-                <Card className="overflow-hidden hover:shadow-md transition-shadow">
+                <Card className="overflow-hidden hover:shadow-md transition-shadow my-2">
                   <CardContent className="p-0">
                     <div className="p-4 flex items-center gap-4">
                       <Avatar className="h-12 w-12">
@@ -443,14 +443,6 @@ export default function PlayersPage() {
                             )}
                           </Button>
                         )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => handleScheduleGame(e, player.id)}
-                          className="text-green-600 hover:text-green-700"
-                        >
-                          <Calendar className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
                   </CardContent>

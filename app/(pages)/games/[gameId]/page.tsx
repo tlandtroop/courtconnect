@@ -512,7 +512,7 @@ export default function GameDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Players</span>
-                  <Badge className="bg-blue-100 text-blue-700">
+                  <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">
                     {game.participants?.length || 0}/{game.playersNeeded}
                   </Badge>
                 </CardTitle>

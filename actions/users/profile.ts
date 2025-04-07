@@ -4,6 +4,49 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import db from "@/lib/db";
 
+export async function getDashboardProfile(userId: string) {
+  try {
+    if (!userId) {
+      return { success: false, error: "User ID is required" };
+    }
+
+    // Fetch minimal user data needed for dashboard
+    const user = await db.user.findUnique({
+      where: { clerkId: userId },
+      select: {
+        id: true,
+        clerkId: true,
+        name: true,
+        username: true,
+        bio: true,
+        location: true,
+        avatarUrl: true,
+        rating: true,
+        gamesPlayed: true,
+        courtsVisited: true,
+        _count: {
+          select: {
+            friends: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    return { success: true, user };
+  } catch (error) {
+    console.error("[GET_DASHBOARD_PROFILE]", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to get user profile",
+    };
+  }
+}
+
 export async function getUserProfile(userId: string) {
   try {
     console.log("Looking up user with clerkId:", userId);

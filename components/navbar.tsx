@@ -103,10 +103,13 @@ const Navbar = () => {
 
           {/* Right side - User Profile & Actions */}
           <div className="flex items-center space-x-2">
-            {/* Schedule Game Button (visible on larger screens) */}
             <div className="hidden lg:block">
               <Link href="/schedule">
-                <Button size="sm" className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex items-center gap-1"
+                >
                   <Calendar className="h-4 w-4" />
                   <span>Schedule Game</span>
                 </Button>
