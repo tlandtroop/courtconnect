@@ -4,6 +4,131 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import db from "@/lib/db";
 
+export async function getUserGames(userId: string, type: string = "upcoming") {
+  try {
+    const user = await db.user.findUnique({
+      where: { clerkId: userId },
+    });
+
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    const today = new Date();
+
+    // Set time to start of day for more reliable comparison
+    today.setHours(0, 0, 0, 0);
+
+    // Different query based on the type of games requested
+    if (type === "upcoming") {
+      const upcomingGames = await db.game.findMany({
+        where: {
+          OR: [
+            { organizerId: user.id },
+            { participants: { some: { id: user.id } } },
+          ],
+          date: {
+            gte: today,
+          },
+        },
+        include: {
+          court: true,
+          participants: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+          organizer: {
+            select: {
+              id: true,
+              clerkId: true,
+              name: true,
+              username: true,
+              avatarUrl: true,
+              rating: true,
+            },
+          },
+        },
+        orderBy: {
+          date: "asc",
+        },
+      });
+
+      // Format dates for consistent handling on the client
+      const formattedGames = upcomingGames.map((game) => ({
+        ...game,
+        date: game.date.toISOString(),
+        startTime: game.startTime.toISOString(),
+      }));
+
+      console.log(
+        `Found ${formattedGames.length} upcoming games for user ${userId}`
+      );
+      return { success: true, games: formattedGames };
+    } else {
+      // History games (those in the past)
+      const gameHistory = await db.game.findMany({
+        where: {
+          OR: [
+            { organizerId: user.id },
+            { participants: { some: { id: user.id } } },
+          ],
+          date: {
+            lt: today,
+          },
+        },
+        include: {
+          court: true,
+          participants: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+          organizer: {
+            select: {
+              id: true,
+              clerkId: true,
+              name: true,
+              username: true,
+              avatarUrl: true,
+              rating: true,
+            },
+          },
+        },
+        orderBy: {
+          date: "desc",
+        },
+        take: 10, // Limit to the 10 most recent games
+      });
+
+      // Format dates for consistent handling on the client
+      const formattedGames = gameHistory.map((game) => ({
+        ...game,
+        date: game.date.toISOString(),
+        startTime: game.startTime.toISOString(),
+      }));
+
+      console.log(
+        `Found ${formattedGames.length} past games for user ${userId}`
+      );
+      return { success: true, games: formattedGames };
+    }
+  } catch (error) {
+    console.error("[GET_USER_GAMES]", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to get user games",
+    };
+  }
+}
+
 export async function getGames({
   courtId,
   gameType,
@@ -188,27 +313,36 @@ export async function createGame({
       return { success: false, error: "User not found" };
     }
 
-    // Proper date handling
+    // Proper date handling for timezone issues
     let gameDate, gameStartTime;
 
     try {
-      // For the date
-      gameDate = new Date(date);
-      if (isNaN(gameDate.getTime())) {
-        throw new Error("Invalid date format");
-      }
+      // Parse the date parts to avoid timezone issues
+      const [year, month, day] = date.split("-").map(Number);
 
-      if (startTime.match(/^\d{2}:\d{2}$/)) {
+      // Create date with local time components to prevent timezone shift
+      gameDate = new Date(year, month - 1, day);
+
+      // Handle time in a similar way
+      if (startTime.match(/^\d{1,2}:\d{2}$/)) {
         const [hours, minutes] = startTime.split(":").map(Number);
 
-        gameStartTime = new Date(gameDate);
+        gameStartTime = new Date(year, month - 1, day);
         gameStartTime.setHours(hours, minutes, 0, 0);
       } else {
-        gameStartTime = new Date(startTime);
+        // Fallback for other time formats
+        gameStartTime = new Date(`${date}T${startTime}`);
       }
 
-      if (isNaN(gameStartTime.getTime())) {
-        throw new Error("Invalid start time format");
+      console.log("Date being used:", {
+        originalDate: date,
+        parsedGameDate: gameDate,
+        startTime,
+        parsedGameStartTime: gameStartTime,
+      });
+
+      if (isNaN(gameDate.getTime()) || isNaN(gameStartTime.getTime())) {
+        throw new Error("Invalid date or time format");
       }
     } catch (error) {
       console.error("Date parsing error:", error);

@@ -37,6 +37,7 @@ import { Game, UserProfile } from "@/types";
 import { getGame } from "@/actions/games/game";
 import { getUserProfile } from "@/actions/users/profile";
 import { joinGame, leaveGame } from "@/actions/games/participate";
+import { isGameInPast, formatDate, formatTime } from "@/lib/date-utils";
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -177,46 +178,6 @@ export default function GameDetailPage() {
     return game.participants.length >= game.playersNeeded;
   };
 
-  // Check if the game is in the past
-  const isGamePast = () => {
-    if (!game || !game.date) return false;
-
-    try {
-      const gameDate = new Date(game.date);
-      if (isNaN(gameDate.getTime())) return false;
-      return isPast(gameDate);
-    } catch (error) {
-      console.error("Error checking if game is past:", error);
-      return false;
-    }
-  };
-
-  // Format date for display
-  const formatGameDate = (date: string | undefined) => {
-    try {
-      if (!date) return "Date not available";
-      const dateObj = new Date(date);
-      if (isNaN(dateObj.getTime())) return "Invalid date";
-      return format(dateObj, "EEEE, MMMM d, yyyy");
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Date format error";
-    }
-  };
-
-  // Format time for display
-  const formatGameTime = (time: string | undefined) => {
-    try {
-      if (!time) return "Time not available";
-      const timeObj = new Date(time);
-      if (isNaN(timeObj.getTime())) return "Invalid time";
-      return format(timeObj, "h:mm a");
-    } catch (error) {
-      console.error("Error formatting time:", error);
-      return "Time format error";
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
@@ -288,11 +249,11 @@ export default function GameDetailPage() {
                 <div className="flex items-center gap-4 text-gray-600 mb-4">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>{formatGameDate(game.date)}</span>
+                    <span>{formatDate(game.date)}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>{formatGameTime(game.startTime)}</span>
+                    <span>{formatTime(game.startTime)}</span>
                   </div>
                 </div>
 
@@ -333,7 +294,7 @@ export default function GameDetailPage() {
                   <div className="flex justify-center py-2">
                     <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                   </div>
-                ) : isGamePast() ? (
+                ) : isGameInPast(game) ? (
                   <Badge
                     variant="secondary"
                     className="px-3 py-2 text-yellow-700 bg-yellow-100"
@@ -604,7 +565,7 @@ export default function GameDetailPage() {
                   )}
                 </div>
 
-                {!isGamePast() &&
+                {!isGameInPast(game) &&
                   !isGameFull() &&
                   !isParticipant() &&
                   userProfile && (

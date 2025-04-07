@@ -15,35 +15,85 @@ interface GamesProps {
 }
 
 const Games = ({ profile, isOwnProfile }: GamesProps) => {
+  // Check if a date is in the past
+  const isInPast = (dateString: string) => {
+    try {
+      const inputDate = new Date(dateString);
+      const today = new Date();
+
+      // Compare only the date parts by setting time to midnight
+      const inputDateOnly = new Date(inputDate);
+      inputDateOnly.setHours(0, 0, 0, 0);
+
+      const todayOnly = new Date(today);
+      todayOnly.setHours(0, 0, 0, 0);
+
+      return inputDateOnly < todayOnly;
+    } catch (error) {
+      console.error("Date comparison error:", error);
+      return false;
+    }
+  };
+
+  // Get all games regardless of which array they're in
+  const allGames = [...(profile.createdGames || []), ...(profile.games || [])];
+
+  // Remove duplicates by ID
+  const uniqueGames = Array.from(
+    new Map(allGames.map((game) => [game.id, game])).values()
+  );
+
+  // Split into upcoming and past games
+  const upcomingGames = uniqueGames.filter((game) => !isInPast(game.date));
+  const pastGames = uniqueGames.filter((game) => isInPast(game.date));
+
+  // Format the game date for display
   const renderGameDate = (date: string) => {
     const gameDate = new Date(date);
     const today = new Date();
 
-    if (
-      gameDate.getDate() === today.getDate() &&
-      gameDate.getMonth() === today.getMonth() &&
-      gameDate.getFullYear() === today.getFullYear()
-    ) {
+    // Reset time parts to midnight for comparison
+    const gameDateOnly = new Date(gameDate);
+    gameDateOnly.setHours(0, 0, 0, 0);
+
+    const todayOnly = new Date(today);
+    todayOnly.setHours(0, 0, 0, 0);
+
+    // Check if it's today
+    if (gameDateOnly.getTime() === todayOnly.getTime()) {
       return "Today";
     }
 
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
-    if (
-      gameDate.getDate() === tomorrow.getDate() &&
-      gameDate.getMonth() === tomorrow.getMonth() &&
-      gameDate.getFullYear() === tomorrow.getFullYear()
-    ) {
+    // Check if it's tomorrow
+    const tomorrowOnly = new Date(todayOnly);
+    tomorrowOnly.setDate(todayOnly.getDate() + 1);
+
+    if (gameDateOnly.getTime() === tomorrowOnly.getTime()) {
       return "Tomorrow";
     }
 
-    return formatDistanceToNow(new Date(date), { addSuffix: true });
+    return formatDistanceToNow(gameDate, { addSuffix: true });
   };
 
+  // Format time for display
   const formatTime = (timeString: string) => {
-    const date = new Date(timeString);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      console.error("Time formatting error:", error);
+      return "Time unavailable";
+    }
   };
+
+  console.log("Game counts:", {
+    all: uniqueGames.length,
+    upcoming: upcomingGames.length,
+    past: pastGames.length,
+  });
 
   return (
     <Card className="overflow-hidden">
@@ -54,7 +104,7 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
         </TabsList>
 
         <TabsContent value="upcoming" className="p-6">
-          {!profile.createdGames || profile.createdGames.length === 0 ? (
+          {upcomingGames.length === 0 ? (
             <div className="text-center text-gray-500 py-6">
               No upcoming games.
               {isOwnProfile && (
@@ -70,7 +120,7 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {profile.createdGames.map((game) => (
+              {upcomingGames.map((game) => (
                 <Link href={`/games/${game.id}`} key={game.id}>
                   <div className="border rounded-xl p-4 hover:shadow-md transition-shadow bg-white">
                     <div className="flex justify-between items-start">
@@ -154,13 +204,13 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
         </TabsContent>
 
         <TabsContent value="history" className="p-6">
-          {profile.games.length === 0 ? (
+          {pastGames.length === 0 ? (
             <div className="text-center text-gray-500 py-6">
               No game history available.
             </div>
           ) : (
             <div className="space-y-4">
-              {profile.games.map((game) => (
+              {pastGames.map((game) => (
                 <Link href={`/games/${game.id}`} key={game.id}>
                   <div className="border rounded-xl p-4 hover:shadow-md transition-shadow bg-white">
                     <div className="flex justify-between items-start">

@@ -6,7 +6,7 @@ import { useUser } from "@clerk/nextjs";
 
 import ProfileEditDialog from "@/components/profile/profile-edit-dialog";
 import { getUserProfile } from "@/actions/users/profile";
-import PlayerStats from "@/components/shared/stats";
+import PlayerStats from "@/components/stats";
 import Friends from "@/components/profile/friends";
 import FavoriteCourts from "@/components/profile/favorite-courts";
 import Games from "@/components/profile/games";

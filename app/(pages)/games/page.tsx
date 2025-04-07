@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, MapPin } from "lucide-react";
 import { getGames, getUpcomingGames } from "@/actions/games";
+import { getUserGames } from "@/actions/games";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -33,16 +34,18 @@ export default function GamesPage() {
     setLoading(true);
     try {
       // Fetch upcoming games
-      const upcomingResult = await getUpcomingGames();
+      const upcomingResult = await getUserGames(user.id, "upcoming");
 
       if (upcomingResult.success && upcomingResult.games) {
+        console.log("Upcoming games:", upcomingResult.games);
         setMyGames(upcomingResult.games as unknown as Game[]);
       }
 
       // Fetch game history
-      const historyResult = await getUpcomingGames();
+      const historyResult = await getUserGames(user.id, "history");
 
       if (historyResult.success && historyResult.games) {
+        console.log("History games:", historyResult.games);
         setGameHistory(historyResult.games as unknown as Game[]);
       }
     } catch (error) {
@@ -51,6 +54,39 @@ export default function GamesPage() {
       setLoading(false);
     }
   };
+
+  // Helper function to check if a date is today or in the future
+  const isDateTodayOrFuture = (dateString: string) => {
+    const inputDate = new Date(dateString);
+    const today = new Date();
+
+    // Compare only the date parts
+    const inputDateOnly = new Date(
+      inputDate.getFullYear(),
+      inputDate.getMonth(),
+      inputDate.getDate()
+    );
+
+    const todayOnly = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+
+    // Date is today or in the future
+    return inputDateOnly >= todayOnly;
+  };
+
+  // Filter games to ensure they're properly categorized
+  const upcomingGames = myGames.filter((game) =>
+    isDateTodayOrFuture(game.date)
+  );
+  const pastGames = gameHistory.filter(
+    (game) => !isDateTodayOrFuture(game.date)
+  );
+
+  console.log("Upcoming count:", upcomingGames.length);
+  console.log("Past count:", pastGames.length);
 
   const formatGameDate = (date: string) => {
     return format(new Date(date), "EEEE, MMMM d");
@@ -107,7 +143,7 @@ export default function GamesPage() {
                 {/* Upcoming Games */}
                 <div>
                   <h2 className="text-lg font-medium mb-4">Upcoming Games</h2>
-                  {myGames.length === 0 ? (
+                  {upcomingGames.length === 0 ? (
                     <Card>
                       <CardContent className="p-6 text-center">
                         <p className="text-gray-500 mb-4">
@@ -120,7 +156,7 @@ export default function GamesPage() {
                     </Card>
                   ) : (
                     <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                      {myGames.map((game) => (
+                      {upcomingGames.map((game) => (
                         <Link key={game.id} href={`/games/${game.id}`}>
                           <Card className="h-full hover:shadow-md transition-shadow">
                             <CardContent className="p-4">
@@ -164,7 +200,7 @@ export default function GamesPage() {
                 {/* Game History */}
                 <div>
                   <h2 className="text-lg font-medium mb-4">Game History</h2>
-                  {gameHistory.length === 0 ? (
+                  {pastGames.length === 0 ? (
                     <Card>
                       <CardContent className="p-6 text-center">
                         <p className="text-gray-500">No game history yet.</p>
@@ -172,7 +208,7 @@ export default function GamesPage() {
                     </Card>
                   ) : (
                     <div className="space-y-3">
-                      {gameHistory.map((game) => (
+                      {pastGames.map((game) => (
                         <Link key={game.id} href={`/games/${game.id}`}>
                           <Card className="hover:bg-gray-50 transition-colors">
                             <CardContent className="p-4">

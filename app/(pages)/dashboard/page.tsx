@@ -8,6 +8,7 @@ import Link from "next/link";
 import FeaturedCourts from "@/app/(pages)/dashboard/_components/featured-courts";
 import PlayerRecommendations from "@/app/(pages)/dashboard/_components/player-recommendations";
 import GameFinder from "@/app/(pages)/dashboard/_components/game-finder";
+
 import {
   Card,
   CardContent,
@@ -18,9 +19,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserProfile } from "@/types";
-import Stats from "@/components/shared/stats";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import Stats from "@/components/stats";
+import { UserProfile } from "@/types";
 
 import { syncUser } from "@/actions/auth/sync-user";
 import { getUserProfile } from "@/actions/users/profile";
@@ -38,14 +39,11 @@ export default function DashboardPage() {
       if (!user) return;
 
       try {
-        // Sync user with database using server action
         await syncUser();
 
-        // Get user profile using server action
         const result = await getUserProfile(user.id);
 
         if (result.success && result.user) {
-          // Calculate profile completion percentage
           const userProfile = result.user as unknown as UserProfile;
           const requiredFields = [
             "name",
@@ -88,7 +86,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Welcome Header */}
         <div className="mb-8">
           {loading || !profile ? (
             <div className="flex items-center gap-4">
@@ -122,7 +119,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Profile completion only if incomplete */}
               {profileCompletionPercentage < 100 && (
                 <Card className="w-full md:w-auto bg-blue-50 border-blue-100">
                   <CardContent className="p-4">
@@ -153,7 +149,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Link href="/schedule" className="block">
             <Card className="hover:shadow-md transition-shadow">
@@ -243,7 +238,6 @@ export default function DashboardPage() {
                 </Card>
               </div>
 
-              {/* Right Column - Player Stats and Weather */}
               <div className="col-span-12 lg:col-span-4 space-y-6">
                 {profile && <Stats profile={profile} />}
               </div>

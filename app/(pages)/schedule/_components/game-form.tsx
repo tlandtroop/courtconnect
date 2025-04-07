@@ -28,13 +28,15 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface GameFormProps {
   preselectedCourtId?: string;
 }
 
 const GameForm = ({ preselectedCourtId }: GameFormProps) => {
-  const [courtId, setCourtId] = useState<string>(preselectedCourtId || "1");
+  const router = useRouter();
+  const [courtId, setCourtId] = useState<string>(preselectedCourtId || "");
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>("14:00"); // Default to 2:00 PM
   const [gameType, setGameType] = useState<string>("Pickleball - Doubles");
@@ -67,6 +69,16 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
     fetchCourts();
   }, [preselectedCourtId]);
 
+  const resetForm = () => {
+    setDate(new Date());
+    setTime("14:00"); // Reset to default time
+    setNotes("");
+    setGameType("Pickleball - Doubles");
+    setSkillLevel("All Levels Welcome");
+    setPlayersNeeded(4);
+    setError("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -85,7 +97,12 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
 
     setIsSubmitting(true);
 
-    const formattedDate = format(date, "yyyy-MM-dd");
+    // Fix timezone issues by working with date parts directly
+    // This ensures the date doesn't change when converting to ISO string
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const formattedDate = `${year}-${month}-${day}`;
 
     try {
       const result = await createGame({
@@ -106,10 +123,15 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
         description: "A game has been created successfully",
       });
 
-      // Reset form or redirect here if needed
-      setDate(undefined);
-      setTime("");
-      setNotes("");
+      // Reset form
+      resetForm();
+
+      // Redirect to the game page
+      if (result.game?.id) {
+        router.push(`/games/${result.game.id}`);
+      } else {
+        router.push("/games");
+      }
     } catch (error) {
       console.error("Error:", error);
       setError("Error creating game");
@@ -169,7 +191,6 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
             )}
           </div>
 
-          {/* Date and Time */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
@@ -223,7 +244,7 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="gameType">Game Type</Label>
-              <Select defaultValue={gameType} onValueChange={setGameType}>
+              <Select value={gameType} onValueChange={setGameType}>
                 <SelectTrigger id="gameType">
                   <SelectValue placeholder="Select game type" />
                 </SelectTrigger>
@@ -246,7 +267,7 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
 
             <div className="space-y-2">
               <Label htmlFor="skillLevel">Skill Level</Label>
-              <Select defaultValue={skillLevel} onValueChange={setSkillLevel}>
+              <Select value={skillLevel} onValueChange={setSkillLevel}>
                 <SelectTrigger id="skillLevel">
                   <SelectValue placeholder="Select skill level" />
                 </SelectTrigger>
