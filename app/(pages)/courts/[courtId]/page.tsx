@@ -13,8 +13,8 @@ import {
   ChevronRight,
   Plus,
 } from "lucide-react";
+import Image from "next/image";
 
-import { getCourt } from "@/actions/courts/court";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -78,12 +78,16 @@ export default function CourtDetailPage() {
     const fetchCourt = async () => {
       try {
         const courtId = params.courtId as string;
-        const result = await getCourt(courtId);
-
-        if (result.success) {
-          setCourt(result.court as CourtDetail);
+        const response = await fetch(`/api/v1/courts?id=${courtId}`);
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to load court details");
+        }
+        const data = await response.json();
+        if (data.success) {
+          setCourt(data.court as CourtDetail);
         } else {
-          setError(result.error || "Failed to load court details");
+          setError(data.error || "Failed to load court details");
         }
       } catch (error) {
         console.error("Error fetching court:", error);
@@ -188,9 +192,11 @@ export default function CourtDetailPage() {
                 {/* Court Image or Map Placeholder */}
                 <div className="mt-6 relative rounded-lg overflow-hidden bg-gray-200 h-64 flex items-center justify-center">
                   {court.images && court.images.length > 0 ? (
-                    <img
+                    <Image
                       src={court.images[0]}
                       alt={court.name}
+                      width={800}
+                      height={400}
                       className="w-full h-full object-cover"
                     />
                   ) : (

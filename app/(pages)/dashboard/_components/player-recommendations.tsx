@@ -9,8 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { findPlayers } from "@/actions/players/index";
-import { addFriend } from "@/actions/users/friends";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -37,13 +35,13 @@ const PlayerRecommendations = () => {
       if (!user) return;
 
       try {
-        const result = await findPlayers({
-          sortBy: "rating",
-          limit: 5,
-        });
-
-        if (result.success && result.players) {
-          setPlayers(result.players as unknown as Player[]);
+        const response = await fetch("/api/v1/players?sortBy=rating&limit=5");
+        if (!response.ok) {
+          throw new Error("Failed to fetch player recommendations");
+        }
+        const data = await response.json();
+        if (data.success && data.players) {
+          setPlayers(data.players as unknown as Player[]);
         }
       } catch (error) {
         console.error("Error fetching player recommendations:", error);
@@ -65,14 +63,19 @@ const PlayerRecommendations = () => {
     setAddingFriend(playerId);
 
     try {
-      const result = await addFriend(playerId);
-
-      if (result.success) {
+      const response = await fetch(`/api/v1/users/friends?id=${playerId}`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to add friend");
+      }
+      const data = await response.json();
+      if (data.success) {
         toast.success("Friend added successfully!");
-        // Remove player from recommendations
         setPlayers((current) => current.filter((p) => p.id !== playerId));
       } else {
-        throw new Error(result.error || "Failed to add friend");
+        throw new Error(data.error || "Failed to add friend");
       }
     } catch (error) {
       console.error("Error adding friend:", error);

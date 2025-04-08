@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import GameFinder from "@/app/(pages)/dashboard/_components/game-finder";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, MapPin } from "lucide-react";
@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getUserGames } from "@/actions/games";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -41,19 +40,27 @@ export default function GamesPage() {
     setLoading(true);
     try {
       // Fetch upcoming games
-      const upcomingResult = await getUserGames(user.id, "upcoming");
-
-      if (upcomingResult.success && upcomingResult.games) {
-        console.log("Upcoming games:", upcomingResult.games);
-        setMyGames(upcomingResult.games as unknown as Game[]);
+      const upcomingResponse = await fetch(
+        `/api/v1/games?userId=${user.id}&type=upcoming`
+      );
+      if (!upcomingResponse.ok) {
+        throw new Error("Failed to fetch upcoming games");
+      }
+      const upcomingData = await upcomingResponse.json();
+      if (upcomingData.success && upcomingData.games) {
+        setMyGames(upcomingData.games as unknown as Game[]);
       }
 
       // Fetch game history
-      const historyResult = await getUserGames(user.id, "history");
-
-      if (historyResult.success && historyResult.games) {
-        console.log("History games:", historyResult.games);
-        setGameHistory(historyResult.games as unknown as Game[]);
+      const historyResponse = await fetch(
+        `/api/v1/games?userId=${user.id}&type=history`
+      );
+      if (!historyResponse.ok) {
+        throw new Error("Failed to fetch game history");
+      }
+      const historyData = await historyResponse.json();
+      if (historyData.success && historyData.games) {
+        setGameHistory(historyData.games as unknown as Game[]);
       }
     } catch (error) {
       console.error("Error fetching user games:", error);
@@ -171,7 +178,7 @@ export default function GamesPage() {
                     <Card>
                       <CardContent className="p-6 text-center">
                         <p className="text-gray-500 mb-4">
-                          You haven't joined any upcoming games yet.
+                          You haven&apos;t joined any upcoming games yet.
                         </p>
                         <Link href="/schedule">
                           <Button>Schedule a Game</Button>

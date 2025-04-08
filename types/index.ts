@@ -5,6 +5,9 @@ export interface Court {
   longitude: number;
   city?: string;
   state?: string;
+  address?: string;
+  zipCode?: string;
+  amenities: string[];
 }
 
 export interface Game {

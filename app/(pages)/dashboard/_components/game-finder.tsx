@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, MapPin, Users, Filter } from "lucide-react";
+import { Calendar, MapPin, Users } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,70 +8,40 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getGames } from "@/actions/games/index";
 import { Game } from "@/types";
 
 interface GameFinderProps {
-  initialCourtId?: string;
-  initialSkillLevel?: string;
-  initialGameType?: string;
   initialSortBy?: "date" | "players" | "skill";
 }
 
-const GameFinder: React.FC<GameFinderProps> = ({
-  initialCourtId,
-  initialSkillLevel,
-  initialGameType,
-  initialSortBy,
-}) => {
+const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
   const router = useRouter();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-  const [courtId, setCourtId] = useState(initialCourtId || "");
-  const [gameType, setGameType] = useState(initialGameType || "");
-  const [skillLevel, setSkillLevel] = useState(initialSkillLevel || "");
-  const [hasSpots, setHasSpots] = useState(true);
-  const [upcoming, setUpcoming] = useState(true);
 
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchGames();
-  }, [courtId, gameType, skillLevel, hasSpots, upcoming, page, initialSortBy]);
+  }, [page, initialSortBy]);
 
   const fetchGames = async () => {
     setLoading(true);
     try {
-      const result = await getGames({
-        courtId: courtId || undefined,
-        gameType: gameType || undefined,
-        skillLevel: skillLevel || undefined,
-        hasSpots,
-        upcoming,
-        page,
-        limit: 5,
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "5",
       });
 
-      if (result.success && result.games) {
-        // Additional filtering to ensure only upcoming games (today or future) are shown
-        const allGames = result.games as unknown as Game[];
-        const filteredGames = allGames.filter((game) =>
-          isDateTodayOrFuture(game.date)
-        );
-
-        // For debugging
-        console.log(
-          `Fetched ${allGames.length} games, filtered to ${filteredGames.length} upcoming games`
-        );
-
-        setGames(filteredGames);
-        setTotalPages(Math.ceil(filteredGames.length / 5) || 1);
-      } else {
-        console.error("Error fetching games:", result.error);
+      const response = await fetch(`/api/v1/games?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch games");
+      }
+      const data = await response.json();
+      if (data.success && data.games) {
+        setGames(data.games);
+        setTotalPages(Math.ceil(data.games.length / 5) || 1);
       }
     } catch (error) {
       console.error("Error fetching games:", error);
@@ -80,42 +50,8 @@ const GameFinder: React.FC<GameFinderProps> = ({
     }
   };
 
-  // Helper function to check if a date is today or in the future
-  const isDateTodayOrFuture = (dateString: string) => {
-    try {
-      const gameDate = new Date(dateString);
-      const today = new Date();
-
-      // Remove time components for comparison
-      const gameDateOnly = new Date(
-        gameDate.getFullYear(),
-        gameDate.getMonth(),
-        gameDate.getDate()
-      );
-
-      const todayOnly = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate()
-      );
-
-      return gameDateOnly >= todayOnly;
-    } catch (error) {
-      console.error("Date comparison error:", error);
-      return false;
-    }
-  };
-
   const handleViewGame = (gameId: string) => {
     router.push(`/games/${gameId}`);
-  };
-
-  const clearFilters = () => {
-    setCourtId("");
-    setGameType("");
-    setSkillLevel("");
-    setHasSpots(true);
-    setUpcoming(true);
   };
 
   const formatGameDate = (dateString: string) => {

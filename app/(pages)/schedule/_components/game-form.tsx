@@ -18,8 +18,6 @@ import {
 } from "@/components/ui/select";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getCourts } from "@/actions/courts";
-import { createGame } from "@/actions/games/index";
 import { Court } from "@/types";
 import {
   Popover,
@@ -51,13 +49,20 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
   useEffect(() => {
     const fetchCourts = async () => {
       try {
-        const result = await getCourts();
-        if (result.success && result.courts) {
-          setCourts(result.courts as Court[]);
+        const response = await fetch("/api/v1/courts");
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to fetch courts");
+        }
+        const data = await response.json();
+        if (data.success && data.courts) {
+          setCourts(data.courts as Court[]);
           // Set default court ID if courts are available and no preselectedCourtId was provided
-          if (result.courts.length > 0 && !preselectedCourtId) {
-            setCourtId(result.courts[0].id);
+          if (data.courts.length > 0 && !preselectedCourtId) {
+            setCourtId(data.courts[0].id);
           }
+        } else {
+          throw new Error(data.error || "Failed to fetch courts");
         }
       } catch (error) {
         console.error("Error fetching courts:", error);
@@ -105,18 +110,37 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
     const formattedDate = `${year}-${month}-${day}`;
 
     try {
-      const result = await createGame({
-        courtId,
-        date: formattedDate,
-        startTime: time,
-        gameType,
-        skillLevel,
-        playersNeeded,
-        notes,
+      const response = await fetch("/api/v1/games", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courtId,
+          date: formattedDate,
+          startTime: time,
+          gameType,
+          skillLevel,
+          playersNeeded,
+          notes,
+        }),
       });
 
-      if (!result.success) {
-        throw new Error(result.error || "Failed to create game");
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Invalid JSON response:", responseText);
+        throw new Error("Server returned an invalid response");
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create game");
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create game");
       }
 
       toast("Game Created", {
@@ -127,8 +151,8 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
       resetForm();
 
       // Redirect to the game page
-      if (result.game?.id) {
-        router.push(`/games/${result.game.id}`);
+      if (data.game?.id) {
+        router.push(`/games/${data.game.id}`);
       } else {
         router.push("/games");
       }

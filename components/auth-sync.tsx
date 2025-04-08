@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { syncUser } from "@/actions/auth/sync-user";
 
 export default function AuthSync() {
   const { isLoaded, isSignedIn, userId } = useAuth();
@@ -11,10 +10,12 @@ export default function AuthSync() {
     const performSync = async () => {
       if (isLoaded && isSignedIn && userId) {
         try {
-          const result = await syncUser();
-
-          if (!result.success) {
-            console.error("Failed to sync user with database:", result.error);
+          const response = await fetch("/api/v1/auth/sync", {
+            method: "POST",
+          });
+          if (!response.ok) {
+            const data = await response.json();
+            console.error("Failed to sync user with database:", data.error);
           }
         } catch (error) {
           console.error("Error syncing user with database:", error);

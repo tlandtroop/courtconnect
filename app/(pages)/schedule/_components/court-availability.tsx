@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCourts } from "@/actions/courts";
 import { Court } from "@/types";
 
 const CourtAvailability = () => {
@@ -20,11 +19,15 @@ const CourtAvailability = () => {
   useEffect(() => {
     const fetchCourts = async () => {
       try {
-        const result = await getCourts();
-        if (result.success && result.courts) {
-          setCourts(result.courts as Court[]);
+        const response = await fetch("/api/v1/courts");
+        if (!response.ok) {
+          throw new Error("Failed to load courts");
+        }
+        const data = await response.json();
+        if (data.success && data.courts) {
+          setCourts(data.courts as Court[]);
         } else {
-          setError(result.error || "Failed to load courts");
+          setError(data.error || "Failed to load courts");
         }
       } catch (error) {
         console.error("Error fetching courts:", error);

@@ -4,15 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import {
-  Search,
-  MapPin,
-  Star,
-  Filter,
-  Calendar,
-  UserPlus,
-  Loader2,
-} from "lucide-react";
+import { Search, MapPin, Star, Filter, UserPlus, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,8 +34,6 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { toast } from "sonner";
-import { findPlayers } from "@/actions/players/index";
-import { addFriend } from "@/actions/users/friends";
 
 interface Player {
   id: string;
@@ -86,26 +76,27 @@ export default function PlayersPage() {
 
   const playersPerPage = 10;
 
-  // Function to fetch players with filters
   const fetchPlayers = async () => {
     setLoading(true);
     try {
-      // Build query parameters for server action
-      const result = await findPlayers({
+      const params = new URLSearchParams({
         search: searchQuery,
-        skillLevel: skillFilter.length > 0 ? skillFilter.join(",") : undefined,
-        location: locationFilter || undefined,
+        skillLevel: skillFilter.join(","),
+        location: locationFilter,
         sortBy,
-        page: currentPage,
-        limit: playersPerPage,
+        page: currentPage.toString(),
+        limit: playersPerPage.toString(),
       });
 
-      if (result.success && result.players) {
-        setPlayers(result.players as unknown as Player[]);
-        setTotalCount(result.pagination?.total || 0);
-        setTotalPages(result.pagination?.pages || 1);
-      } else {
-        throw new Error(result.error || "Failed to fetch players");
+      const response = await fetch(`/api/v1/players?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch players");
+      }
+      const data = await response.json();
+      if (data.success && data.players) {
+        setPlayers(data.players as unknown as Player[]);
+        setTotalCount(data.pagination?.total || 0);
+        setTotalPages(data.pagination?.pages || 1);
       }
     } catch (error) {
       console.error("Error fetching players:", error);
@@ -115,18 +106,16 @@ export default function PlayersPage() {
     }
   };
 
-  // Effect to fetch players when filters change
   useEffect(() => {
     if (user) {
       fetchPlayers();
     }
   }, [currentPage, sortBy, skillFilter, locationFilter, user]);
 
-  // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
       if (user) {
-        setCurrentPage(1); // Reset to first page on new search
+        setCurrentPage(1);
         fetchPlayers();
       }
     }, 300);
@@ -174,22 +163,23 @@ export default function PlayersPage() {
     e.preventDefault();
     e.stopPropagation();
 
-    if (isAddingFriend) return; // Prevent multiple clicks
+    if (isAddingFriend) return;
 
     setIsAddingFriend(playerId);
     try {
-      // Use the server action to add friend
-      const result = await addFriend(playerId);
-
-      if (result.success) {
-        // Update the player in the list to show as friend
+      const response = await fetch(`/api/v1/users/friends?id=${playerId}`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to add friend");
+      }
+      const data = await response.json();
+      if (data.success) {
         setPlayers((current) =>
           current.map((p) => (p.id === playerId ? { ...p, isFriend: true } : p))
         );
-
         toast.success("Friend added successfully!");
-      } else {
-        throw new Error(result.error || "Failed to add friend");
       }
     } catch (error) {
       console.error("Error adding friend:", error);
@@ -199,21 +189,13 @@ export default function PlayersPage() {
     }
   };
 
-  const handleScheduleGame = (e: React.MouseEvent, playerId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Redirect to schedule page with the player pre-selected
-    router.push(`/schedule?player=${playerId}`);
-  };
-
-  // Handle filter changes
   const handleSkillFilterChange = (skill: string) => {
     const updatedFilters = skillFilter.includes(skill)
       ? skillFilter.filter((s) => s !== skill)
       : [...skillFilter, skill];
 
     setSkillFilter(updatedFilters);
-    setCurrentPage(1); // Reset to first page on filter change
+    setCurrentPage(1);
   };
 
   const handleApplyFilters = () => {
@@ -282,7 +264,6 @@ export default function PlayersPage() {
           </div>
         </div>
 
-        {/* Search bar */}
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <Input
@@ -293,7 +274,6 @@ export default function PlayersPage() {
           />
         </div>
 
-        {/* Active filters display */}
         {(skillFilter.length > 0 || locationFilter) && (
           <div className="flex flex-wrap gap-2 mb-4">
             {skillFilter.map((skill) => (
@@ -328,17 +308,14 @@ export default function PlayersPage() {
           </div>
         )}
 
-        {/* Player count */}
         <div className="flex justify-between items-center mb-4">
           <p className="text-sm text-gray-500">
             {totalCount} {totalCount === 1 ? "player" : "players"} found
           </p>
         </div>
 
-        {/* Players list */}
         <div className="space-y-6 my-4">
           {loading ? (
-            // Loading skeletons
             Array.from({ length: 5 }).map((_, index) => (
               <Card key={index} className="overflow-hidden">
                 <CardContent className="p-0">
@@ -452,7 +429,6 @@ export default function PlayersPage() {
           )}
         </div>
 
-        {/* Pagination */}
         {!loading && totalPages > 1 && (
           <div className="mt-6">
             <Pagination>
@@ -470,7 +446,6 @@ export default function PlayersPage() {
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter((page) => {
-                    // Show first page, last page, current page, and pages around current page
                     return (
                       page === 1 ||
                       page === totalPages ||
@@ -478,7 +453,6 @@ export default function PlayersPage() {
                     );
                   })
                   .map((page, index, array) => {
-                    // Add ellipsis where needed
                     const showEllipsis =
                       index > 0 && array[index - 1] !== page - 1;
 

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { format, isPast } from "date-fns";
 import {
   Calendar,
   Clock,
@@ -33,10 +32,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Game, UserProfile } from "@/types";
-
-import { getGame } from "@/actions/games/game";
-import { getUserProfile } from "@/actions/users/profile";
-import { joinGame, leaveGame } from "@/actions/games/participate";
 import { isGameInPast, formatDate, formatTime } from "@/lib/date-utils";
 
 export default function GameDetailPage() {
@@ -55,15 +50,16 @@ export default function GameDetailPage() {
   useEffect(() => {
     const fetchGame = async () => {
       try {
-        // Call server action to get game details
-        const result = await getGame(gameId);
-
-        if (result.success && result.game) {
-          // Cast through unknown first to avoid type checking
-          setGame(result.game as unknown as Game);
+        const response = await fetch(`/api/v1/games?id=${gameId}`);
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to fetch game");
+        }
+        const data = await response.json();
+        if (data.success && data.game) {
+          setGame(data.game as unknown as Game);
         } else {
-          console.error("Error fetching game:", result.error);
-          toast.error("Failed to load game details");
+          throw new Error(data.error || "Failed to fetch game");
         }
       } catch (error) {
         console.error("Error fetching game:", error);
@@ -81,14 +77,16 @@ export default function GameDetailPage() {
       if (!user?.id) return;
 
       try {
-        // Call server action to get user profile
-        const result = await getUserProfile(user.id);
-
-        if (result.success && result.user) {
-          // Cast through unknown first to avoid type checking
-          setUserProfile(result.user as unknown as UserProfile);
+        const response = await fetch(`/api/v1/users?id=${user.id}`);
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to fetch user profile");
+        }
+        const data = await response.json();
+        if (data.success && data.user) {
+          setUserProfile(data.user as unknown as UserProfile);
         } else {
-          console.error("Error fetching user profile:", result.error);
+          throw new Error(data.error || "Failed to fetch user profile");
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -109,21 +107,19 @@ export default function GameDetailPage() {
 
     try {
       setIsJoining(true);
-
-      // Call server action to join game
-      const result = await joinGame(gameId);
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to join game");
+      const response = await fetch(`/api/v1/games/${gameId}/participate`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to join game");
       }
-
-      // Update the game data with the new participant
-      if (result.game) {
-        // Cast through unknown first to avoid type checking
-        setGame(result.game as unknown as Game);
+      const data = await response.json();
+      if (data.success && data.game) {
+        setGame(data.game as unknown as Game);
         toast.success("You have joined the game!");
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error joining game:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to join the game"
@@ -137,21 +133,19 @@ export default function GameDetailPage() {
   const handleLeaveGame = async () => {
     try {
       setIsLeaving(true);
-
-      // Call server action to leave game
-      const result = await leaveGame(gameId);
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to leave game");
+      const response = await fetch(`/api/v1/games/${gameId}/participate`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to leave game");
       }
-
-      // Update the game data with the participant removed
-      if (result.game) {
-        // Cast through unknown first to avoid type checking
-        setGame(result.game as unknown as Game);
+      const data = await response.json();
+      if (data.success && data.game) {
+        setGame(data.game as unknown as Game);
         toast.success("You have left the game");
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error leaving game:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to leave the game"

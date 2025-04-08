@@ -8,8 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCourts } from "@/actions/courts";
-import { getGames } from "@/actions/games/index";
 import { Court, Game } from "@/types";
 
 const FeaturedCourts = () => {
@@ -21,29 +19,28 @@ const FeaturedCourts = () => {
     const fetchCourtsAndGames = async () => {
       try {
         // Fetch courts
-        const courtsResult = await getCourts();
-
-        if (courtsResult.success && courtsResult.courts) {
-          const featuredCourts = courtsResult.courts.slice(0, 3);
+        const courtsResponse = await fetch("/api/v1/courts");
+        if (!courtsResponse.ok) {
+          throw new Error("Failed to fetch courts");
+        }
+        const courtsData = await courtsResponse.json();
+        if (courtsData.success && courtsData.courts) {
+          const featuredCourts = courtsData.courts.slice(0, 3);
           setCourts(featuredCourts as Court[]);
 
           // Fetch games for each court
           const gamesData: Record<string, Game[]> = {};
 
           for (const court of featuredCourts) {
-            const gamesResult = await getGames({
-              courtId: court.id,
-              upcoming: true,
-              limit: 2,
-            });
-
-            if (gamesResult.success && gamesResult.games) {
-              // Filter games to only include upcoming games (today or in the future)
-              const games = gamesResult.games as unknown as Game[];
-              const upcomingGames = games.filter((game) =>
-                isDateTodayOrFuture(game.date)
-              );
-              gamesData[court.id] = upcomingGames;
+            const gamesResponse = await fetch(
+              `/api/v1/games?courtId=${court.id}&upcoming=true&limit=2`
+            );
+            if (!gamesResponse.ok) {
+              throw new Error("Failed to fetch games");
+            }
+            const gamesData = await gamesResponse.json();
+            if (gamesData.success && gamesData.games) {
+              gamesData[court.id] = gamesData.games;
             }
           }
 
@@ -58,35 +55,6 @@ const FeaturedCourts = () => {
 
     fetchCourtsAndGames();
   }, []);
-
-  // Helper function to check if a date is today or in the future
-  const isDateTodayOrFuture = (dateString: string) => {
-    try {
-      // Log the date for debugging
-      console.log("Checking date:", dateString);
-
-      // Get the date parts only (no time, no timezone)
-      const gameDate = new Date(dateString);
-      const today = new Date();
-
-      // Create date strings in YYYY-MM-DD format
-      const gameDateStr = `${gameDate.getFullYear()}-${String(
-        gameDate.getMonth() + 1
-      ).padStart(2, "0")}-${String(gameDate.getDate()).padStart(2, "0")}`;
-      const todayStr = `${today.getFullYear()}-${String(
-        today.getMonth() + 1
-      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-      // Log the comparison values
-      console.log(`Comparing: Game date ${gameDateStr} >= Today ${todayStr}`);
-
-      // Simple string comparison works reliably for YYYY-MM-DD format
-      return gameDateStr >= todayStr;
-    } catch (error) {
-      console.error("Date comparison error:", error, "for date:", dateString);
-      return false;
-    }
-  };
 
   // Check if a date is today
   const isToday = (dateString: string) => {

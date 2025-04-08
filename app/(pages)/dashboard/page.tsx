@@ -23,8 +23,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Stats from "@/components/stats";
 import { UserProfile } from "@/types";
 
-import { getDashboardProfile } from "@/actions/users/profile";
-
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -39,15 +37,12 @@ export default function DashboardPage() {
 
       try {
         setLoading(true);
-
-        // Remove this line:
-        // await syncUser();
-
-        // Keep the profile fetch:
-        const result = await getDashboardProfile(user.id);
-
-        if (result.success && result.user) {
-          // Calculate profile completion percentage
+        const response = await fetch(`/api/v1/users?id=${user.id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+        const data = await response.json();
+        if (data.success && data.user) {
           const requiredFields = [
             "name",
             "username",
@@ -56,18 +51,18 @@ export default function DashboardPage() {
             "avatarUrl",
           ];
           const filledFields = requiredFields.filter(
-            (field) => !!result.user[field as keyof typeof result.user]
+            (field) => !!data.user[field as keyof typeof data.user]
           );
           const completionPercentage = Math.round(
             (filledFields.length / requiredFields.length) * 100
           );
 
           setProfile({
-            ...(result.user as unknown as UserProfile),
+            ...(data.user as unknown as UserProfile),
             profileCompletionPercentage: completionPercentage,
           });
         } else {
-          console.error("Error fetching profile:", result.error);
+          console.error("Error fetching profile:", data.error);
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);

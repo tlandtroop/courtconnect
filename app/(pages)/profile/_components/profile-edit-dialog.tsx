@@ -20,9 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Import server actions
-import { getUserProfile, updateUserProfile } from "@/actions/users/profile";
-
 interface ProfileEditDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -56,17 +53,20 @@ export default function ProfileEditDialog({
       setError("");
 
       try {
-        // Call server action to get user profile
-        const result = await getUserProfile(userId);
-
-        if (result.success && result.user) {
+        const response = await fetch(`/api/v1/users?id=${userId}`);
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to fetch user data");
+        }
+        const data = await response.json();
+        if (data.success && data.user) {
           setFormData({
-            username: result.user.username || "",
-            bio: result.user.bio || "",
-            location: result.user.location || "",
+            username: data.user.username || "",
+            bio: data.user.bio || "",
+            location: data.user.location || "",
           });
         } else {
-          throw new Error(result.error || "Failed to fetch user data");
+          throw new Error(data.error || "Failed to fetch user data");
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -103,24 +103,34 @@ export default function ProfileEditDialog({
     }
 
     try {
-      const result = await updateUserProfile(userId, formData);
+      const response = await fetch(`/api/v1/users?id=${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (result.success) {
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to update profile");
+      }
+
+      const data = await response.json();
+      if (data.success) {
         toast("Profile Updated", {
           description: "Your profile has been successfully updated.",
         });
-
         onProfileUpdated();
         onClose();
       } else {
-        throw new Error(result.error || "Failed to update profile");
+        throw new Error(data.error || "Failed to update profile");
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error updating profile:", error);
       setError(
         error instanceof Error ? error.message : "Failed to update profile"
       );
-
       toast("Error Updating Profile", {
         description: "An error occurred while updating your profile.",
       });
