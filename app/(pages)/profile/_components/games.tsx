@@ -122,7 +122,7 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
             <div className="space-y-4">
               {upcomingGames.map((game) => (
                 <Link href={`/games/${game.id}`} key={game.id}>
-                  <div className="border rounded-xl p-4 hover:shadow-md transition-shadow bg-white">
+                  <div className="border rounded-xl p-4 hover:shadow-md transition-shadow bg-white mb-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">

@@ -7,7 +7,7 @@ const ProfileLoader = () => {
         <Skeleton className="h-48 w-full" />
 
         <div className="p-6 relative">
-          <Skeleton className="absolute -top-16 left-6 w-32 h-32 rounded-full border-4 border-white" />
+          {/* <Skeleton className="absolute -top-16 left-6 w-32 h-32 rounded-full border-4 border-white" /> */}
 
           <div className="ml-36 flex justify-between items-start">
             <div>
