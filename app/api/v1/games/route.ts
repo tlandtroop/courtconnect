@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
       const game = await db.game.create({
         data: {
           date: new Date(date),
-          startTime: new Date(startTime),
+          startTime: new Date(`${date}T${startTime}`),
           gameType,
           skillLevel,
           playersNeeded: Number(playersNeeded),
