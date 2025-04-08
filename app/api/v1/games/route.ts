@@ -151,11 +151,7 @@ export async function GET(request: NextRequest) {
       const skip = (page - 1) * limit;
 
       const query: Prisma.GameFindManyArgs = {
-        where: {
-          date: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-          },
-        },
+        where: {},
         include: {
           court: true,
           organizer: {
@@ -184,9 +180,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: {
-          date: "asc",
-        },
+        orderBy: [{ date: "asc" }, { startTime: "asc" }],
         skip,
         take: limit,
       };
@@ -204,11 +198,34 @@ export async function GET(request: NextRequest) {
         };
       }
       if (upcoming) {
-        const existingDateFilter = query.where!.date || {};
-        query.where!.date = {
-          ...(typeof existingDateFilter === "object" ? existingDateFilter : {}),
-          gte: new Date(),
-        };
+        const now = new Date();
+        query.where!.OR = [
+          {
+            // Games on a future date
+            date: {
+              gt: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+            },
+          },
+          {
+            // Games today but haven't started yet
+            AND: [
+              {
+                date: {
+                  equals: new Date(
+                    now.getFullYear(),
+                    now.getMonth(),
+                    now.getDate()
+                  ),
+                },
+              },
+              {
+                startTime: {
+                  gt: now,
+                },
+              },
+            ],
+          },
+        ];
       }
       if (createdBy) {
         const creator = await db.user.findUnique({

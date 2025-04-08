@@ -107,8 +107,15 @@ export default function GameDetailPage() {
 
     try {
       setIsJoining(true);
-      const response = await fetch(`/api/v1/games/${gameId}/participate`, {
-        method: "POST",
+      const response = await fetch(`/api/v1/games`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          gameId: gameId,
+          action: "join",
+        }),
       });
       if (!response.ok) {
         const data = await response.json();
@@ -133,8 +140,15 @@ export default function GameDetailPage() {
   const handleLeaveGame = async () => {
     try {
       setIsLeaving(true);
-      const response = await fetch(`/api/v1/games/${gameId}/participate`, {
-        method: "DELETE",
+      const response = await fetch(`/api/v1/games`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          gameId: gameId,
+          action: "leave",
+        }),
       });
       if (!response.ok) {
         const data = await response.json();

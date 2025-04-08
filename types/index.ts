@@ -53,9 +53,7 @@ export interface UserProfile {
   bio?: string;
   location?: string;
   avatarUrl?: string;
-  rating: number;
-  gamesPlayed: number;
-  courtsVisited: number;
+  skillLevel: string;
   profileCompletionPercentage?: number;
   games: Game[];
   createdGames: Game[];

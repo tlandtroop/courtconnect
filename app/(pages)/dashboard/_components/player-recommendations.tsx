@@ -40,8 +40,8 @@ const PlayerRecommendations = () => {
           throw new Error("Failed to fetch player recommendations");
         }
         const data = await response.json();
-        if (data.success && data.players) {
-          setPlayers(data.players as unknown as Player[]);
+        if (data.data) {
+          setPlayers(data.data as unknown as Player[]);
         }
       } catch (error) {
         console.error("Error fetching player recommendations:", error);

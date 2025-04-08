@@ -21,10 +21,6 @@ model User {
   avatarUrl     String?
   bannerUrl     String?
   skillLevel    String    @default("beginner") // "beginner", "intermediate", "advanced", "expert"
-  rating        Float     @default(2.5)
-  gamesPlayed   Int       @default(0)
-  winRate       Float     @default(50.0)
-  courtsVisited Int       @default(0)
   lastActive    DateTime  @default(now())
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

@@ -18,9 +18,12 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
   const router = useRouter();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [limit, setLimit] = useState(5);
 
   useEffect(() => {
     fetchGames();
@@ -29,19 +32,17 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
   const fetchGames = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "5",
-      });
-
-      const response = await fetch(`/api/v1/games?${params.toString()}`);
+      const response = await fetch(
+        `/api/v1/games?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}&upcoming=true`
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch games");
       }
       const data = await response.json();
       if (data.success && data.games) {
         setGames(data.games);
-        setTotalPages(Math.ceil(data.games.length / 5) || 1);
+        setTotalCount(data.pagination?.total || 0);
+        setTotalPages(data.pagination?.totalPages || 1);
       }
     } catch (error) {
       console.error("Error fetching games:", error);

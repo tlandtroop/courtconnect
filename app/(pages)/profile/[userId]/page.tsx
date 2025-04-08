@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
 import ProfileEditDialog from "@/app/(pages)/profile/_components/profile-edit-dialog";
-import PlayerStats from "@/components/stats";
 import Friends from "@/app/(pages)/profile/_components/friends";
 import FavoriteCourts from "@/app/(pages)/profile/_components/favorite-courts";
 import Games from "@/app/(pages)/profile/_components/games";
@@ -79,7 +78,6 @@ export default function ProfilePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Friends profile={userProfile} isOwnProfile={isOwnProfile} />
-                <PlayerStats profile={userProfile} />
                 <FavoriteCourts
                   profile={userProfile}
                   isOwnProfile={isOwnProfile}

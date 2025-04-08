@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
     const [players, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        orderBy: { [sortBy]: "desc" },
+        orderBy:
+          sortBy === "games" ? { gamesPlayed: "desc" } : { [sortBy]: "desc" },
         skip: (page - 1) * limit,
         take: limit,
         select: {

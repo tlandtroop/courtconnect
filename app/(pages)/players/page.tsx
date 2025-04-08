@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import { Search, MapPin, Star, Filter, UserPlus, Loader2 } from "lucide-react";
+import { Search, MapPin, Filter, UserPlus, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,9 +11,6 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import {
   Pagination,
   PaginationContent,
@@ -42,8 +37,6 @@ interface Player {
   username: string;
   avatarUrl?: string;
   location?: string;
-  rating: number;
-  skillLevel: string;
   gamesPlayed: number;
   winRate: number;
   createdAt: string;
@@ -52,23 +45,26 @@ interface Player {
   friendsCount: number;
 }
 
-const skillLevels = [
-  { value: "beginner", label: "Beginner (1.0-2.5)" },
-  { value: "intermediate", label: "Intermediate (3.0-3.5)" },
-  { value: "advanced", label: "Advanced (4.0-4.5)" },
-  { value: "expert", label: "Expert (5.0+)" },
-];
+interface ApiPlayer {
+  id: string;
+  name: string;
+  username: string;
+  avatarUrl?: string;
+  location?: string;
+  gamesPlayed: number;
+  winRate: number;
+  createdAt: string;
+  lastActive: string;
+}
 
 export default function PlayersPage() {
-  const router = useRouter();
   const { user } = useUser();
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [skillFilter, setSkillFilter] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState("");
-  const [sortBy, setSortBy] = useState("rating");
+  const [sortBy, setSortBy] = useState("games");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -81,7 +77,6 @@ export default function PlayersPage() {
     try {
       const params = new URLSearchParams({
         search: searchQuery,
-        skillLevel: skillFilter.join(","),
         location: locationFilter,
         sortBy,
         page: currentPage.toString(),
@@ -94,7 +89,7 @@ export default function PlayersPage() {
       }
       const data = await response.json();
       if (data.data) {
-        const transformedPlayers = data.data.map((player: any) => ({
+        const transformedPlayers = data.data.map((player: ApiPlayer) => ({
           ...player,
           clerkId: player.id,
           isFriend: false,
@@ -118,7 +113,7 @@ export default function PlayersPage() {
     if (user) {
       fetchPlayers();
     }
-  }, [currentPage, sortBy, skillFilter, locationFilter, user]);
+  }, [currentPage, sortBy, locationFilter, user]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -129,7 +124,7 @@ export default function PlayersPage() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, skillFilter, locationFilter]);
+  }, [searchQuery, locationFilter]);
 
   const getTimeAgo = (dateString: string) => {
     if (!dateString) return "Never";
@@ -146,29 +141,6 @@ export default function PlayersPage() {
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     return `${Math.floor(diffDays / 30)} months ago`;
-  };
-
-  const getSkillLevelColor = (skillLevel: string) => {
-    switch (skillLevel) {
-      case "beginner":
-        return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "intermediate":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
-      case "advanced":
-        return "bg-purple-100 text-purple-800 hover:bg-purple-200";
-      case "expert":
-        return "bg-red-100 text-red-800 hover:bg-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
-    }
-  };
-
-  const getSkillLevelLabel = (skillLevel: string) => {
-    return (
-      skillLevels
-        .find((level) => level.value === skillLevel)
-        ?.label.split(" ")[0] || skillLevel
-    );
   };
 
   const handleAddFriend = async (e: React.MouseEvent, playerId: string) => {
@@ -201,20 +173,6 @@ export default function PlayersPage() {
     }
   };
 
-  const handleSkillFilterChange = (skill: string) => {
-    const updatedFilters = skillFilter.includes(skill)
-      ? skillFilter.filter((s) => s !== skill)
-      : [...skillFilter, skill];
-
-    setSkillFilter(updatedFilters);
-    setCurrentPage(1);
-  };
-
-  const handleApplyFilters = () => {
-    setCurrentPage(1);
-    fetchPlayers();
-  };
-
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -226,7 +184,6 @@ export default function PlayersPage() {
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="rating">Highest Rating</SelectItem>
                 <SelectItem value="games">Most Games</SelectItem>
                 <SelectItem value="winRate">Best Win Rate</SelectItem>
                 <SelectItem value="recentlyActive">Recently Active</SelectItem>
@@ -241,25 +198,6 @@ export default function PlayersPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>Skill Level</DropdownMenuLabel>
-                {skillLevels.map((level) => (
-                  <DropdownMenuCheckboxItem
-                    key={level.value}
-                    checked={skillFilter.includes(level.value)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSkillFilter([...skillFilter, level.value]);
-                      } else {
-                        setSkillFilter(
-                          skillFilter.filter((item) => item !== level.value)
-                        );
-                      }
-                    }}
-                  >
-                    {level.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-                <DropdownMenuSeparator />
                 <div className="p-2">
                   <label className="text-sm font-medium mb-1 block">
                     Location
@@ -285,40 +223,6 @@ export default function PlayersPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-
-        {(skillFilter.length > 0 || locationFilter) && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {skillFilter.map((skill) => (
-              <Badge key={skill} variant="secondary" className="px-2 py-1">
-                {getSkillLevelLabel(skill)}
-                <button
-                  className="ml-1 text-gray-500 hover:text-gray-700"
-                  onClick={() => handleSkillFilterChange(skill)}
-                >
-                  ×
-                </button>
-              </Badge>
-            ))}
-            {locationFilter && (
-              <Badge variant="secondary" className="px-2 py-1">
-                <MapPin className="h-3 w-3 mr-1" /> {locationFilter}
-                <button
-                  className="ml-1 text-gray-500 hover:text-gray-700"
-                  onClick={() => setLocationFilter("")}
-                >
-                  ×
-                </button>
-              </Badge>
-            )}
-            <Button
-              variant="link"
-              className="text-xs h-auto p-0"
-              onClick={handleApplyFilters}
-            >
-              Clear all
-            </Button>
-          </div>
-        )}
 
         <div className="flex justify-between items-center mb-4">
           <p className="text-sm text-gray-500">
@@ -353,9 +257,6 @@ export default function PlayersPage() {
             <Card className="overflow-hidden">
               <CardContent className="p-6 text-center">
                 <p className="text-gray-500">No players match your criteria</p>
-                <Button variant="link" onClick={handleApplyFilters}>
-                  Clear all filters
-                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -386,20 +287,6 @@ export default function PlayersPage() {
                             </>
                           )}
                         </div>
-                      </div>
-
-                      <div className="hidden sm:flex flex-col items-end gap-1 min-w-[100px]">
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                          <span className="font-medium">
-                            {player.rating.toFixed(1)}
-                          </span>
-                        </div>
-                        <Badge
-                          className={getSkillLevelColor(player.skillLevel)}
-                        >
-                          {getSkillLevelLabel(player.skillLevel)}
-                        </Badge>
                       </div>
 
                       <div className="hidden md:flex flex-col items-end gap-1 min-w-[140px] text-sm">

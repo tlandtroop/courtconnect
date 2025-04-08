@@ -35,8 +35,12 @@ export async function POST() {
           name:
             firstName && lastName
               ? `${firstName} ${lastName}`
-              : firstName || username || "Anonymous",
-          username: username || email?.split("@")[0] || "anonymous",
+              : firstName ||
+                lastName ||
+                username ||
+                email?.split("@")[0] ||
+                "Anonymous",
+          username: username || email?.split("@")[0] || userId,
           avatarUrl: imageUrl,
           lastActive: new Date(),
         },
@@ -50,8 +54,12 @@ export async function POST() {
           name:
             firstName && lastName
               ? `${firstName} ${lastName}`
-              : firstName || username || "Anonymous",
-          username: username || email?.split("@")[0] || "anonymous",
+              : firstName ||
+                lastName ||
+                username ||
+                email?.split("@")[0] ||
+                "Anonymous",
+          username: username || email?.split("@")[0] || userId,
           avatarUrl: imageUrl,
           lastActive: new Date(),
         },

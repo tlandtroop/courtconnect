@@ -1,81 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Calendar, CheckCircle, MapPin, Users, Award } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
-
-import FeaturedCourts from "@/app/(pages)/dashboard/_components/featured-courts";
-import PlayerRecommendations from "@/app/(pages)/dashboard/_components/player-recommendations";
-import GameFinder from "@/app/(pages)/dashboard/_components/game-finder";
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import Stats from "@/components/stats";
 import { UserProfile } from "@/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import GameFinder from "@/app/(pages)/dashboard/_components/game-finder";
+import FeaturedCourts from "@/app/(pages)/dashboard/_components/featured-courts";
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileCompletionPercentage, setProfileCompletionPercentage] =
-    useState(0);
-  const [activeTab, setActiveTab] = useState("games");
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!user) return;
+      if (!user?.id) return;
 
       try {
-        setLoading(true);
         const response = await fetch(`/api/v1/users?id=${user.id}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch profile");
+          throw new Error("Failed to fetch user profile");
         }
         const data = await response.json();
         if (data.success && data.user) {
-          const requiredFields = [
-            "name",
-            "username",
-            "bio",
-            "location",
-            "avatarUrl",
-          ];
-          const filledFields = requiredFields.filter(
-            (field) => !!data.user[field as keyof typeof data.user]
-          );
-          const completionPercentage = Math.round(
-            (filledFields.length / requiredFields.length) * 100
-          );
-
-          setProfile({
-            ...(data.user as unknown as UserProfile),
-            profileCompletionPercentage: completionPercentage,
-          });
-        } else {
-          console.error("Error fetching profile:", data.error);
+          setProfile(data.user as unknown as UserProfile);
         }
       } catch (error) {
-        console.error("Error fetching profile data:", error);
+        console.error("Error fetching user profile:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (isLoaded) {
+    if (isLoaded && user) {
       fetchUserProfile();
     }
   }, [user, isLoaded]);
 
+  if (!isLoaded || loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <div>Please sign in to view your dashboard.</div>;
+  }
+
+  // This helper function is kept for potential future personalization features
   const getTimeOfDay = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "morning";
@@ -87,69 +61,27 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-8">
-          {loading || !profile ? (
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-16 w-16 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-4 w-40" />
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between flex-wrap gap-4">
+          <Card className="mb-6">
+            <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage
-                    src={user?.imageUrl}
-                    alt={user?.fullName || "User"}
-                  />
+                  <AvatarImage src={user.imageUrl} />
                   <AvatarFallback>
-                    {user?.firstName?.charAt(0) || "U"}
+                    {user.firstName?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    Good {getTimeOfDay()}, {user?.firstName || "Player"}!
+                  <h1 className="text-2xl font-bold">
+                    Welcome back, {user.firstName || "Player"}!
                   </h1>
-                  <p className="text-gray-500">
-                    {profile.gamesPlayed > 0
-                      ? `You've played ${profile.gamesPlayed} games so far`
-                      : "Ready to schedule your first game?"}
-                  </p>
+                  <p className="text-gray-500">Ready to hit the courts?</p>
                 </div>
               </div>
-
-              {profileCompletionPercentage < 100 && (
-                <Card className="w-full md:w-auto bg-blue-50 border-blue-100">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                      <h3 className="font-medium">Complete Your Profile</h3>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-600 rounded-full"
-                          style={{ width: `${profileCompletionPercentage}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm">
-                        {profileCompletionPercentage}%
-                      </span>
-                      <Link href={`/profile/${user?.id}`}>
-                        <Button size="sm" variant="outline">
-                          Complete
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <Link href="/schedule" className="block">
             <Card className="hover:shadow-md transition-shadow">
               <CardContent className="p-4 flex items-center gap-3">
@@ -180,29 +112,15 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/players" className="block">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="bg-purple-100 text-purple-700 p-2 rounded-lg">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Find Players</h3>
-                  <p className="text-sm text-gray-500">Connect with others</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
           <Link href={`/profile/${user?.id}`} className="block">
             <Card className="hover:shadow-md transition-shadow">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="bg-amber-100 text-amber-700 p-2 rounded-lg">
-                  <Award className="w-5 h-5" />
+                  <MapPin className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-medium">My Profile</h3>
-                  <p className="text-sm text-gray-500">View your stats</p>
+                  <p className="text-sm text-gray-500">View your profile</p>
                 </div>
               </CardContent>
             </Card>
@@ -210,64 +128,20 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Content */}
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
-          <TabsList className="mb-4">
+        <Tabs defaultValue="games" className="space-y-6">
+          <TabsList>
             <TabsTrigger value="games">Games</TabsTrigger>
             <TabsTrigger value="courts">Courts</TabsTrigger>
-            <TabsTrigger value="players">Players</TabsTrigger>
           </TabsList>
 
           <TabsContent value="games" className="space-y-6">
-            <div className="grid grid-cols-12 gap-6">
-              {/* Left Column - Game Finder */}
-              <div className="col-span-12 lg:col-span-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Find Games Near You</CardTitle>
-                    <CardDescription>
-                      Browse and join upcoming games
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <GameFinder />
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="col-span-12 lg:col-span-4 space-y-6">
-                {profile && <Stats profile={profile} />}
-              </div>
-            </div>
+            <GameFinder initialSortBy="date" />
           </TabsContent>
 
           <TabsContent value="courts" className="space-y-6">
             <div className="grid grid-cols-12 gap-6">
-              {/* Left Column - Featured Courts */}
-              <div className="col-span-12 lg:col-span-8">
+              <div className="col-span-12">
                 <FeaturedCourts />
-              </div>
-
-              {/* Right Column */}
-              <div className="col-span-12 lg:col-span-4 space-y-6">
-                {profile && <Stats profile={profile} />}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="players" className="space-y-6">
-            <div className="grid grid-cols-12 gap-6">
-              {/* Left Column */}
-              <div className="col-span-12 lg:col-span-8">
-                <PlayerRecommendations />
-              </div>
-
-              {/* Right Column */}
-              <div className="col-span-12 lg:col-span-4 space-y-6">
-                {profile && <Stats profile={profile} />}
               </div>
             </div>
           </TabsContent>
