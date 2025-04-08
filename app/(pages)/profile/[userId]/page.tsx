@@ -10,7 +10,7 @@ import Friends from "@/app/(pages)/profile/_components/friends";
 import FavoriteCourts from "@/app/(pages)/profile/_components/favorite-courts";
 import Games from "@/app/(pages)/profile/_components/games";
 import { UserProfile } from "@/types";
-import ProfileLoader from "@/app/(pages)/profile/_components/loader";
+// import ProfileLoader from "@/app/(pages)/profile/_components/loader";
 import ProfileNotFound from "@/app/(pages)/profile/_components/not-found";
 import ProfileInfo from "@/app/(pages)/profile/_components/profile-info";
 
@@ -25,27 +25,27 @@ export default function ProfilePage() {
   const userId = params.userId as string;
   const isOwnProfile = currentUser?.id === userId;
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await fetch(`/api/v1/users?id=${params.userId}`);
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Failed to fetch user profile");
-        }
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch(`/api/v1/users?id=${params.userId}`);
+      if (!response.ok) {
         const data = await response.json();
-        if (data.success && data.user) {
-          setUserProfile(data.user as unknown as UserProfile);
-        } else {
-          throw new Error(data.error || "Failed to fetch user profile");
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
+        throw new Error(data.error || "Failed to fetch user profile");
       }
-    };
+      const data = await response.json();
+      if (data.success && data.user) {
+        setUserProfile(data.user as unknown as UserProfile);
+      } else {
+        throw new Error(data.error || "Failed to fetch user profile");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (params.userId) {
       fetchUserProfile();
     }
