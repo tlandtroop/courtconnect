@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10");
 
     const where: WhereClause = {
-      id: { not: userId }, // Exclude current user
+      id: { not: userId },
     };
 
     if (search) {
@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         select: {
           id: true,
+          clerkId: true,
           name: true,
           username: true,
           email: true,
@@ -63,18 +64,27 @@ export async function GET(request: NextRequest) {
           location: true,
           rating: true,
           avatarUrl: true,
+          gamesPlayed: true,
+          winRate: true,
+          lastActive: true,
+          createdAt: true,
         },
       }),
       prisma.user.count({ where }),
     ]);
 
+    // Filter out the current user from the results
+    const filteredPlayers = players.filter(
+      (player) => player.clerkId !== userId
+    );
+
     return NextResponse.json({
-      data: players,
+      data: filteredPlayers,
       pagination: {
-        total,
+        total: total - 1, // Subtract 1 to account for the current user
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil((total - 1) / limit),
       },
     });
   } catch (error) {

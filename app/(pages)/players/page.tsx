@@ -93,10 +93,18 @@ export default function PlayersPage() {
         throw new Error("Failed to fetch players");
       }
       const data = await response.json();
-      if (data.success && data.players) {
-        setPlayers(data.players as unknown as Player[]);
+      if (data.data) {
+        const transformedPlayers = data.data.map((player: any) => ({
+          ...player,
+          clerkId: player.id,
+          isFriend: false,
+          friendsCount: 0,
+          lastActive: player.lastActive || new Date().toISOString(),
+          createdAt: player.createdAt || new Date().toISOString(),
+        }));
+        setPlayers(transformedPlayers);
         setTotalCount(data.pagination?.total || 0);
-        setTotalPages(data.pagination?.pages || 1);
+        setTotalPages(data.pagination?.totalPages || 1);
       }
     } catch (error) {
       console.error("Error fetching players:", error);
@@ -124,7 +132,11 @@ export default function PlayersPage() {
   }, [searchQuery, skillFilter, locationFilter]);
 
   const getTimeAgo = (dateString: string) => {
+    if (!dateString) return "Never";
+
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Never";
+
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));

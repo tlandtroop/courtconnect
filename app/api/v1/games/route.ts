@@ -151,7 +151,11 @@ export async function GET(request: NextRequest) {
       const skip = (page - 1) * limit;
 
       const query: Prisma.GameFindManyArgs = {
-        where: {},
+        where: {
+          date: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        },
         include: {
           court: true,
           organizer: {
