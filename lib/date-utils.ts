@@ -50,13 +50,9 @@ export const isGameInPast = (game: { date?: string }): boolean => {
  * Formats a date string to display format
  *
  * @param dateString The date string to format
- * @param formatStr Optional format string (defaults to "EEEE, MMMM d, yyyy")
  * @returns string The formatted date
  */
-export const formatDate = (
-  dateString: string | undefined,
-  formatStr = "EEEE, MMMM d, yyyy"
-): string => {
+export const formatDate = (dateString: string | undefined): string => {
   try {
     if (!dateString) return "Date not available";
 
