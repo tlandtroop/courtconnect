@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
       return errorResponse("User not found", 404);
     }
 
-    // Get the friend
+    // Get the friend using clerkId
     const friend = await prisma.user.findUnique({
-      where: { id: friendId },
+      where: { clerkId: friendId },
     });
 
     if (!friend) {
@@ -111,9 +111,9 @@ export async function DELETE(request: NextRequest) {
       return errorResponse("User not found", 404);
     }
 
-    // Get the friend
+    // Get the friend using clerkId
     const friend = await prisma.user.findUnique({
-      where: { id: friendId },
+      where: { clerkId: friendId },
     });
 
     if (!friend) {
