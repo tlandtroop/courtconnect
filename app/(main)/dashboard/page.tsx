@@ -7,8 +7,8 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import GameFinder from "@/app/(pages)/dashboard/_components/game-finder";
-import FeaturedCourts from "@/app/(pages)/dashboard/_components/featured-courts";
+import GameFinder from "@/app/(main)/dashboard/_components/game-finder";
+import FeaturedCourts from "@/app/(main)/dashboard/_components/featured-courts";
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();

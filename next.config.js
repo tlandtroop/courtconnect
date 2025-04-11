@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: true,
-  },
   images: {
     domains: ["maps.googleapis.com", "img.clerk.com", "images.clerk.dev"],
     remotePatterns: [

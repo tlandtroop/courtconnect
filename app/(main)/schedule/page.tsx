@@ -2,7 +2,7 @@
 
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import GameForm from "@/app/(pages)/schedule/_components/game-form";
+import GameForm from "@/app/(main)/schedule/_components/game-form";
 
 function ScheduleContent() {
   const searchParams = useSearchParams();

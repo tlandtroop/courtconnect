@@ -24,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import Logo from "./logo";
 
 const Navbar = () => {
   const { user } = useUser();
@@ -71,12 +72,7 @@ const Navbar = () => {
           {/* Left side - Logo */}
           <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center space-x-2">
-              <div className="bg-blue-600 text-white p-2 rounded-md">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">
-                CourtConnect
-              </span>
+              <Logo isInsideLink={true} />
             </Link>
           </div>
 

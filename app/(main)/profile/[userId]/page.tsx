@@ -4,14 +4,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
-import ProfileEditDialog from "@/app/(pages)/profile/_components/profile-edit-dialog";
-import Friends from "@/app/(pages)/profile/_components/friends";
-import FavoriteCourts from "@/app/(pages)/profile/_components/favorite-courts";
-import Games from "@/app/(pages)/profile/_components/games";
+import ProfileEditDialog from "@/app/(main)/profile/_components/profile-edit-dialog";
+import Friends from "@/app/(main)/profile/_components/friends";
+import FavoriteCourts from "@/app/(main)/profile/_components/favorite-courts";
+import Games from "@/app/(main)/profile/_components/games";
 import { UserProfile } from "@/types";
 // import ProfileLoader from "@/app/(pages)/profile/_components/loader";
-import ProfileNotFound from "@/app/(pages)/profile/_components/not-found";
-import ProfileInfo from "@/app/(pages)/profile/_components/profile-info";
+import ProfileNotFound from "@/app/(main)/profile/_components/not-found";
+import ProfileInfo from "@/app/(main)/profile/_components/profile-info";
 
 export default function ProfilePage() {
   const params = useParams();

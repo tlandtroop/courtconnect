@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Filters from "@/app/(pages)/courts/_components/filters";
-import GoogleMaps from "@/app/(pages)/courts/_components/google-maps";
+import Filters from "@/app/(main)/courts/_components/filters";
+import GoogleMaps from "@/app/(main)/courts/_components/google-maps";
 import { Court } from "@prisma/client";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";

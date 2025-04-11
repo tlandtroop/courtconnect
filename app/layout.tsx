@@ -3,8 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import Navbar from "@/components/navbar";
-import AuthSync from "@/components/auth-sync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,14 +29,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[#f8fafc] bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px]`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <div className="min-h-screen">
-            <Navbar />
-            <AuthSync />
-            <main className="container mx-auto px-4 py-8">{children}</main>
-            <Toaster />
-          </div>
+          {children}
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
