@@ -1,81 +1,121 @@
 import React from "react";
-import { Search, } from "lucide-react";
+import { Search, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
-const Filters = ({onValueChange, onPickleChange, onBasketChange, onTennisChange, onVolleyChange, slider, onSliderChange}:any) => {
-  const handleSearch = (event:any) => {
-    onValueChange(event.target.value)
-  }
-  const handlePickleCheck = (event:any) => {
-    onPickleChange(event.target.checked);
-  }
-  const handleBasketCheck = (event:any) => {
-    onBasketChange(event.target.checked);
-  }
-  const handleTennisCheck = (event:any) => {
-    onTennisChange(event.target.checked);
-  }
-  const handleVolleyChange = (event:any) => {
-    onVolleyChange(event.target.checked);
-  }
-  const handleSlide = (event:any) => {
-    onSliderChange(event.target.value);
-  }
+interface FiltersProps {
+  onValueChange: (value: string) => void;
+  onPickleChange: (checked: boolean) => void;
+  onBasketChange: (checked: boolean) => void;
+  onTennisChange: (checked: boolean) => void;
+  onVolleyChange: (checked: boolean) => void;
+  slider: number[];
+  onSliderChange: (value: number) => void;
+}
+
+const Filters = ({
+  onValueChange,
+  onPickleChange,
+  onBasketChange,
+  onTennisChange,
+  onVolleyChange,
+  slider,
+  onSliderChange,
+}: FiltersProps) => {
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onValueChange(event.target.value);
+  };
+
   return (
-    <Card>
-    <CardHeader>
-      <CardTitle>Search Courts</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-4">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <input
-            className="w-full pl-10 pr-4 py-2 border rounded-lg"
-            type="text"
-            placeholder="Search by location..."
-            onChange={handleSearch}
-          />
-        </div>
-        {/* Filters */}
-        <div className="space-y-4">
-          <div className="font-medium">Filters</div>
-          <div className="space-y-2">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" onChange={handlePickleCheck} />
-              <span>Pickleball Courts</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" onChange={handleBasketCheck} />
-              <span>Basketball Courts</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" onChange={handleTennisCheck} />
-              <span>Tennis Courts</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" onChange={handleVolleyChange} />
-              <span>Volleyball Courts</span>
-            </label>
+    <Card className="sticky top-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="h-5 w-5" />
+          Search Courts
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-10"
+              type="text"
+              placeholder="Search by location..."
+              onChange={handleSearch}
+            />
           </div>
 
-          <div className="space-y-2">
-            <div className="font-medium">Distance</div>
-            <input type="range" className="w-full" 
-              step={1} 
-              min={1} 
-              max={10} 
-              onChange={handleSlide}
-            />
-            <div className="text-sm text-gray-500">
-              Within {slider} miles
+          <Separator />
+
+          {/* Court Types */}
+          <div className="space-y-4">
+            <Label className="text-base">Court Types</Label>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="pickleball"
+                  onCheckedChange={(checked) =>
+                    onPickleChange(checked as boolean)
+                  }
+                />
+                <Label htmlFor="pickleball">Pickleball Courts</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="basketball"
+                  onCheckedChange={(checked) =>
+                    onBasketChange(checked as boolean)
+                  }
+                />
+                <Label htmlFor="basketball">Basketball Courts</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="tennis"
+                  onCheckedChange={(checked) =>
+                    onTennisChange(checked as boolean)
+                  }
+                />
+                <Label htmlFor="tennis">Tennis Courts</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="volleyball"
+                  onCheckedChange={(checked) =>
+                    onVolleyChange(checked as boolean)
+                  }
+                />
+                <Label htmlFor="volleyball">Volleyball Courts</Label>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Distance */}
+          <div className="space-y-4">
+            <Label className="text-base">Distance</Label>
+            <div className="space-y-2">
+              <Slider
+                defaultValue={slider}
+                max={10}
+                step={1}
+                onValueChange={(value) => onSliderChange(value[0])}
+              />
+              <div className="text-sm text-muted-foreground text-center">
+                Within {slider[0]} miles
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </CardContent>
-  </Card>
+      </CardContent>
+    </Card>
   );
 };
 

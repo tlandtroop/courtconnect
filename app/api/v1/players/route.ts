@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       where.location = { contains: location, mode: "insensitive" };
     }
 
-    const [players, total] = await Promise.all([
+    const [players, total, currentUser] = await Promise.all([
       prisma.user.findMany({
         where,
         orderBy:
@@ -79,14 +79,29 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.user.count({ where }),
+      prisma.user.findUnique({
+        where: { clerkId: userId },
+        select: {
+          friends: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      }),
     ]);
+
+    // Get list of friend IDs
+    const friendIds = currentUser?.friends.map((friend) => friend.id) || [];
 
     // Filter out the current user from the results and add computed fields
     const filteredPlayers = players
       .filter((player) => player.clerkId !== userId)
       .map((player) => ({
         ...player,
+        id: player.clerkId,
         gamesPlayed: player._count.games + player._count.createdGames,
+        isFriend: friendIds.includes(player.id),
       }));
 
     return NextResponse.json({

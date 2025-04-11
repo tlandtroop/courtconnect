@@ -24,7 +24,7 @@ const ProfileNotFound = () => {
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/">
-            <Button variant="default">Return Home</Button>
+            <Button>Return Home</Button>
           </Link>
 
           <Link href="/players">

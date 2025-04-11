@@ -18,7 +18,6 @@ export default function ProfilePage() {
   const { user: currentUser } = useUser();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const userId = params.userId as string;
@@ -38,7 +37,7 @@ export default function ProfilePage() {
         throw new Error(data.error || "Failed to fetch user profile");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Error fetching user profile:", err);
     } finally {
       setLoading(false);
     }
@@ -73,11 +72,12 @@ export default function ProfilePage() {
               setIsEditDialogOpen={setIsEditDialogOpen}
             />
 
-            <div className="space-y-6">
-              <Games profile={userProfile} isOwnProfile={isOwnProfile} />
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <Games profile={userProfile} isOwnProfile={isOwnProfile} />
                 <Friends profile={userProfile} isOwnProfile={isOwnProfile} />
+              </div>
+              <div>
                 <FavoriteCourts
                   profile={userProfile}
                   isOwnProfile={isOwnProfile}

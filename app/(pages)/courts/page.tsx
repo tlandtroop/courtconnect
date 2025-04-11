@@ -4,14 +4,20 @@ import { useState, useEffect } from "react";
 import Filters from "@/app/(pages)/courts/_components/filters";
 import GoogleMaps from "@/app/(pages)/courts/_components/google-maps";
 import { Court } from "@prisma/client";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CourtsPage() {
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState(
     "sports+courts+in+Gainesville+within+5+miles"
   );
+  const [checkedPickle, setCheckedPickle] = useState(false);
+  const [checkedBasket, setCheckedBasket] = useState(false);
+  const [checkedTennis, setCheckedTennis] = useState(false);
+  const [checkedVolley, setCheckedVolley] = useState(false);
+  const [slider, setSlider] = useState([5]);
 
   useEffect(() => {
     const fetchCourts = async () => {
@@ -28,7 +34,7 @@ export default function CourtsPage() {
           throw new Error(data.error || "Failed to fetch courts");
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching courts:", err);
       } finally {
         setLoading(false);
       }
@@ -54,12 +60,6 @@ export default function CourtsPage() {
       setSearchValue(val);
     }
   };
-
-  const [checkedPickle, setCheckedPickle] = useState(false);
-  const [checkedBasket, setCheckedBasket] = useState(false);
-  const [checkedTennis, setCheckedTennis] = useState(false);
-  const [checkedVolley, setCheckedVolley] = useState(false);
-  const [slider, setSlider] = useState([5]);
 
   const handleBasketChange = (newBasket: boolean) => {
     setCheckedBasket(newBasket);
@@ -108,26 +108,37 @@ export default function CourtsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-xl">Loading courts...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-xl text-red-500">Error: {error}</div>
+      <div className="min-h-screen bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-3">
+              <Card className="p-6">
+                <Skeleton className="h-8 w-3/4 mb-4" />
+                <Skeleton className="h-10 w-full mb-4" />
+                <Skeleton className="h-6 w-1/2 mb-4" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-4" />
+                <Skeleton className="h-6 w-1/2 mb-4" />
+                <Skeleton className="h-4 w-full" />
+              </Card>
+            </div>
+            <div className="col-span-9">
+              <Skeleton className="h-[600px] w-full rounded-lg" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-12 gap-6">
           {/* Left Sidebar - Filters */}
-          <div className="col-span-3 space-y-6">
+          <div className="col-span-3">
             <Filters
               onValueChange={handleValueChange}
               onPickleChange={handlePickleChange}
@@ -138,8 +149,11 @@ export default function CourtsPage() {
               onSliderChange={handleSliderChange}
             />
           </div>
-          <div className="col-span-9 space-y-6">
-            <GoogleMaps searchValue={searchValue} courts={courts} />
+          {/* Map */}
+          <div className="col-span-9">
+            <Card className="h-[600px] overflow-hidden">
+              <GoogleMaps searchValue={searchValue} courts={courts} />
+            </Card>
           </div>
         </div>
       </div>

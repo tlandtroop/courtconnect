@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
-import { UserProfile } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,33 +12,13 @@ import FeaturedCourts from "@/app/(pages)/dashboard/_components/featured-courts"
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user?.id) return;
-
-      try {
-        const response = await fetch(`/api/v1/users?clerkId=${user.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch user profile");
-        }
-        const data = await response.json();
-        if (data.success && data.user) {
-          setProfile(data.user as unknown as UserProfile);
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (isLoaded && user) {
-      fetchUserProfile();
+    if (isLoaded) {
+      setLoading(false);
     }
-  }, [user, isLoaded]);
+  }, [isLoaded]);
 
   if (!isLoaded || loading) {
     return;
@@ -52,8 +31,8 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="mb-8">
-          <Card className="mb-6">
+        <div className="mb-6">
+          <Card className="mb-4">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
@@ -73,9 +52,9 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Link href="/schedule" className="block">
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-md transition-shadow h-full">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="bg-blue-100 text-blue-700 p-2 rounded-lg">
                   <Calendar className="w-5 h-5" />
@@ -89,7 +68,7 @@ export default function DashboardPage() {
           </Link>
 
           <Link href="/courts" className="block">
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-md transition-shadow h-full">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="bg-green-100 text-green-700 p-2 rounded-lg">
                   <MapPin className="w-5 h-5" />
@@ -105,7 +84,7 @@ export default function DashboardPage() {
           </Link>
 
           <Link href={`/profile/${user?.id}`} className="block">
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-md transition-shadow h-full">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="bg-amber-100 text-amber-700 p-2 rounded-lg">
                   <MapPin className="w-5 h-5" />
@@ -120,22 +99,22 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="games" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="games">Games</TabsTrigger>
-            <TabsTrigger value="courts">Courts</TabsTrigger>
+        <Tabs defaultValue="games" className="space-y-4">
+          <TabsList className="w-full md:w-auto">
+            <TabsTrigger value="games" className="flex-1 md:flex-none">
+              Games
+            </TabsTrigger>
+            <TabsTrigger value="courts" className="flex-1 md:flex-none">
+              Courts
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="games" className="space-y-6">
+          <TabsContent value="games" className="space-y-4">
             <GameFinder initialSortBy="date" />
           </TabsContent>
 
-          <TabsContent value="courts" className="space-y-6">
-            <div className="grid grid-cols-12 gap-6">
-              <div className="col-span-12">
-                <FeaturedCourts />
-              </div>
-            </div>
+          <TabsContent value="courts" className="space-y-4">
+            <FeaturedCourts />
           </TabsContent>
         </Tabs>
       </div>

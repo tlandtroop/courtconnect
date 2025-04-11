@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
-import { Search, MapPin, Filter, UserPlus, Loader2 } from "lucide-react";
+import { Search, MapPin, Filter, UserPlus, Loader2, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +28,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 interface Player {
@@ -91,9 +97,6 @@ export default function PlayersPage() {
       if (data.data) {
         const transformedPlayers = data.data.map((player: ApiPlayer) => ({
           ...player,
-          clerkId: player.id,
-          isFriend: false,
-          friendsCount: 0,
           lastActive: player.lastActive || new Date().toISOString(),
           createdAt: player.createdAt || new Date().toISOString(),
         }));
@@ -154,11 +157,10 @@ export default function PlayersPage() {
       const response = await fetch(`/api/v1/users/friends?id=${playerId}`, {
         method: "POST",
       });
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || "Failed to add friend");
       }
-      const data = await response.json();
       if (data.success) {
         setPlayers((current) =>
           current.map((p) => (p.id === playerId ? { ...p, isFriend: true } : p))
@@ -261,7 +263,7 @@ export default function PlayersPage() {
             </Card>
           ) : (
             players.map((player) => (
-              <Link href={`/profile/${player.clerkId}`} key={player.id}>
+              <Link href={`/profile/${player.id}`} key={player.id}>
                 <Card className="overflow-hidden hover:shadow-md transition-shadow my-2">
                   <CardContent className="p-0">
                     <div className="p-4 flex items-center gap-4">
@@ -304,20 +306,46 @@ export default function PlayersPage() {
                       </div>
 
                       <div className="flex gap-2">
-                        {!player.isFriend && player.clerkId !== user?.id && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => handleAddFriend(e, player.id)}
-                            className="text-blue-600 hover:text-blue-700"
-                            disabled={isAddingFriend === player.id}
-                          >
-                            {isAddingFriend === player.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <UserPlus className="h-4 w-4" />
-                            )}
-                          </Button>
+                        {player.clerkId !== user?.id && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div>
+                                  {player.isFriend ? (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-green-600 hover:text-green-700"
+                                      disabled
+                                    >
+                                      <Check className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={(e) =>
+                                        handleAddFriend(e, player.id)
+                                      }
+                                      className="text-blue-600 hover:text-blue-700"
+                                      disabled={isAddingFriend === player.id}
+                                    >
+                                      {isAddingFriend === player.id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <UserPlus className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  )}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {player.isFriend
+                                  ? "Already friends"
+                                  : "Add as friend"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                     </div>

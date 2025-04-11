@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, ChevronRight, Star } from "lucide-react";
+import { Users } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { UserProfile } from "@/types";
@@ -19,15 +19,6 @@ const Friends = ({ profile, isOwnProfile }: FriendsProps) => {
             <Users className="w-5 h-5 text-blue-500" />
             Friends
           </div>
-          {profile.friends.length > 0 && (
-            <Link
-              href="/friends"
-              className="text-sm text-blue-500 hover:underline flex items-center"
-            >
-              View All
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
@@ -69,10 +60,6 @@ const Friends = ({ profile, isOwnProfile }: FriendsProps) => {
                   <div className="flex-grow">
                     <div className="font-medium truncate">
                       {friend.name || friend.username || "User"}
-                    </div>
-                    <div className="text-sm text-gray-500 flex items-center gap-1">
-                      <Star className="size-3 text-yellow-400" />
-                      {friend.rating.toFixed(1)} rating
                     </div>
                   </div>
                 </div>
