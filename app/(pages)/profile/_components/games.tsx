@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar, MapPin, Clock, Star } from "lucide-react";
+import { Calendar, MapPin, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { Card } from "@/components/ui/card";
@@ -225,10 +225,6 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
                             year: "numeric",
                           })}
                         </div>
-                        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
-                          <Star className="w-3 h-3 mr-1 text-yellow-500" />
-                          {profile.rating.toFixed(1)}
-                        </Badge>
                       </div>
                     </div>
                   </div>
