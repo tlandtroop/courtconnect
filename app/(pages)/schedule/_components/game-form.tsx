@@ -323,6 +323,7 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
                               className="object-cover"
                               onError={() => handleImageError(court.id)}
                               unoptimized
+                              priority={false}
                             />
                           </div>
                         ) : (
@@ -399,6 +400,7 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
                                     className="object-cover"
                                     onError={() => handleImageError(court.id)}
                                     unoptimized
+                                    priority={false}
                                   />
                                 </div>
                               ) : (

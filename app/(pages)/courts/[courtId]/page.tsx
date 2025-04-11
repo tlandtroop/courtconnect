@@ -157,9 +157,6 @@ export default function CourtDetailPage() {
                   </div>
                   <div className="flex items-center space-x-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full">
                     <Star className="h-4 w-4 fill-blue-500 text-blue-500" />
-                    <span className="font-medium">
-                      {court.rating.toFixed(1)}
-                    </span>
                     <span className="text-sm text-gray-500">
                       ({court.reviewCount})
                     </span>

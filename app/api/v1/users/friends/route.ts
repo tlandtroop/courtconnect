@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import prisma from "@/lib/db";
+import { db } from "@/lib/db";
 
 // Helper function for consistent error responses
 const errorResponse = (message: string, status: number = 400) => {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the current user
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { clerkId: userId },
     });
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the friend using clerkId
-    const friend = await prisma.user.findUnique({
+    const friend = await db.user.findUnique({
       where: { clerkId: friendId },
     });
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if they're already friends
-    const alreadyFriends = await prisma.user.findFirst({
+    const alreadyFriends = await db.user.findFirst({
       where: {
         id: user.id,
         friends: {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Add friend connection
-    await prisma.user.update({
+    await db.user.update({
       where: { id: user.id },
       data: {
         friends: {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Add reciprocal connection
-    await prisma.user.update({
+    await db.user.update({
       where: { id: friend.id },
       data: {
         friends: {
@@ -103,7 +103,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get the current user
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { clerkId: userId },
     });
 
@@ -112,7 +112,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get the friend using clerkId
-    const friend = await prisma.user.findUnique({
+    const friend = await db.user.findUnique({
       where: { clerkId: friendId },
     });
 
@@ -121,7 +121,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Remove friend connection
-    await prisma.user.update({
+    await db.user.update({
       where: { id: user.id },
       data: {
         friends: {
@@ -131,7 +131,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     // Remove reciprocal connection
-    await prisma.user.update({
+    await db.user.update({
       where: { id: friend.id },
       data: {
         friends: {

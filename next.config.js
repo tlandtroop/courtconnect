@@ -4,7 +4,13 @@ const nextConfig = {
     serverActions: true,
   },
   images: {
+    domains: ["maps.googleapis.com", "img.clerk.com", "images.clerk.dev"],
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "maps.googleapis.com",
+        pathname: "/maps/api/place/photo/**",
+      },
       {
         protocol: "https",
         hostname: "img.clerk.com",
