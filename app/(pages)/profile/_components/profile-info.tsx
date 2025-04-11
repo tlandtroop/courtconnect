@@ -50,7 +50,7 @@ const ProfileInfo = ({
 
             <p className="text-gray-500">@{profile.username}</p>
 
-            {profile.location && (
+            {profile?.location && (
               <div className="flex items-center gap-2 mt-2">
                 <MapPin className="w-4 h-4 text-gray-400" />
                 <span className="text-gray-600">{profile.location}</span>

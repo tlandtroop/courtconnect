@@ -1,13 +1,32 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/db";
 
 export async function POST() {
   try {
     const { userId } = await auth();
-    if (!userId) {
+    const user = await currentUser();
+
+    if (!userId || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Get primary email
+    const primaryEmail = user.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId
+    );
+
+    if (!primaryEmail) {
+      return NextResponse.json(
+        { error: "Email address is required" },
+        { status: 400 }
+      );
+    }
+
+    const email = primaryEmail.emailAddress;
+    const name =
+      `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Anonymous";
+    const username = user.username || email.split("@")[0];
 
     // Check if user exists in database
     const existingUser = await prisma.user.findUnique({
@@ -16,26 +35,33 @@ export async function POST() {
 
     if (existingUser) {
       // Update existing user
-      await prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: { clerkId: userId },
         data: {
+          email,
+          name,
+          username,
+          avatarUrl: user.imageUrl,
           lastActive: new Date(),
         },
       });
+
+      return NextResponse.json({ success: true, user: updatedUser });
     } else {
-      // Create new user with generated email if none provided
-      await prisma.user.create({
+      // Create new user
+      const newUser = await prisma.user.create({
         data: {
           clerkId: userId,
-          email: `${userId}@courtconnect.app`,
-          name: "Anonymous",
-          username: userId,
+          email,
+          name,
+          username,
+          avatarUrl: user.imageUrl,
           lastActive: new Date(),
         },
       });
-    }
 
-    return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, user: newUser });
+    }
   } catch (error) {
     console.error("Error syncing user:", error);
     return NextResponse.json(
