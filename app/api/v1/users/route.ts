@@ -1,43 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import db from "@/lib/db";
+import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { User } from "@prisma/client";
-
-type UserWithRelations = User & {
-  games: Array<{
-    id: string;
-    date: Date;
-    gameType: string;
-    skillLevel: string;
-    court: {
-      id: string;
-      name: string;
-    };
-  }>;
-  createdGames: Array<{
-    id: string;
-    date: Date;
-    gameType: string;
-    skillLevel: string;
-    court: {
-      id: string;
-      name: string;
-    };
-  }>;
-  favorites: Array<{
-    id: string;
-    name: string;
-  }>;
-  friends: Array<{
-    id: string;
-    clerkId: string;
-    name: string;
-    username: string;
-    avatarUrl: string;
-    rating: number;
-  }>;
-};
 
 // Helper function for consistent error responses
 const errorResponse = (message: string, status: number = 400) => {
@@ -60,14 +24,14 @@ const withAuth = async (handler: (userId: string) => Promise<NextResponse>) => {
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const userId = searchParams.get("id");
+  const userId = searchParams.get("clerkId") || searchParams.get("id");
   const type = searchParams.get("type");
 
   if (userId) {
     return withAuth(async () => {
       try {
         if (type === "dashboard") {
-          const user = await db.user.findUnique({
+          const user = await prisma.user.findUnique({
             where: { clerkId: userId },
             select: {
               id: true,
@@ -77,9 +41,6 @@ export async function GET(request: NextRequest) {
               bio: true,
               location: true,
               avatarUrl: true,
-              rating: true,
-              gamesPlayed: true,
-              courtsVisited: true,
               _count: {
                 select: {
                   friends: true,
@@ -94,32 +55,43 @@ export async function GET(request: NextRequest) {
 
           return successResponse({ user });
         } else {
-          const user = await db.user.findUnique({
+          const user = await prisma.user.findUnique({
             where: { clerkId: userId },
             include: {
               games: {
-                include: {
-                  court: true,
-                },
-                orderBy: {
-                  date: "desc",
-                },
-                take: 5,
-              },
-              createdGames: {
-                include: {
-                  court: true,
-                },
-                where: {
-                  date: {
-                    gte: new Date(),
+                select: {
+                  id: true,
+                  date: true,
+                  gameType: true,
+                  skillLevel: true,
+                  court: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
                   },
                 },
-                orderBy: {
-                  date: "asc",
+              },
+              createdGames: {
+                select: {
+                  id: true,
+                  date: true,
+                  gameType: true,
+                  skillLevel: true,
+                  court: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
                 },
               },
-              favorites: true,
+              favorites: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
               friends: {
                 select: {
                   id: true,
@@ -127,7 +99,6 @@ export async function GET(request: NextRequest) {
                   name: true,
                   username: true,
                   avatarUrl: true,
-                  rating: true,
                 },
               },
             },
@@ -140,8 +111,8 @@ export async function GET(request: NextRequest) {
           return successResponse({ user });
         }
       } catch (error) {
-        console.error("[GET_USER]", error);
-        return errorResponse("Failed to get user");
+        console.error("Error fetching user:", error);
+        return errorResponse("Failed to fetch user", 500);
       }
     });
   }
@@ -149,7 +120,7 @@ export async function GET(request: NextRequest) {
   // Get current user
   return withAuth(async (userId: string) => {
     try {
-      const user = await db.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { clerkId: userId },
       });
 
@@ -175,7 +146,7 @@ export async function POST(request: NextRequest) {
         return errorResponse("Missing required fields");
       }
 
-      const user = await db.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { clerkId: userId },
       });
 
@@ -188,7 +159,7 @@ export async function POST(request: NextRequest) {
           return errorResponse("Friend ID is required");
         }
 
-        const friend = await db.user.findUnique({
+        const friend = await prisma.user.findUnique({
           where: { id: friendId },
         });
 
@@ -200,7 +171,7 @@ export async function POST(request: NextRequest) {
           return errorResponse("Cannot add yourself as a friend");
         }
 
-        const alreadyFriends = await db.user.findFirst({
+        const alreadyFriends = await prisma.user.findFirst({
           where: {
             id: user.id,
             friends: {
@@ -215,7 +186,7 @@ export async function POST(request: NextRequest) {
           return errorResponse("Already friends with this user");
         }
 
-        await db.user.update({
+        await prisma.user.update({
           where: { id: user.id },
           data: {
             friends: {
@@ -224,7 +195,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        await db.user.update({
+        await prisma.user.update({
           where: { id: friend.id },
           data: {
             friends: {
@@ -253,7 +224,7 @@ export async function PATCH(request: NextRequest) {
       const body = await request.json();
       const { username, bio, location } = body;
 
-      const user = await db.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { clerkId: userId },
       });
 
@@ -262,7 +233,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       if (username) {
-        const existingUser = await db.user.findFirst({
+        const existingUser = await prisma.user.findFirst({
           where: {
             username,
             NOT: {
@@ -276,7 +247,7 @@ export async function PATCH(request: NextRequest) {
         }
       }
 
-      const updatedUser = await db.user.update({
+      const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: {
           username,

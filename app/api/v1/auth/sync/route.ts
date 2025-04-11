@@ -15,6 +15,8 @@ export async function POST() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    console.log("Session claims:", sessionClaims);
+
     const email = sessionClaims.email as string;
     const firstName = sessionClaims.firstName as string;
     const lastName = sessionClaims.lastName as string;
@@ -31,7 +33,7 @@ export async function POST() {
       await prisma.user.update({
         where: { clerkId: userId },
         data: {
-          email,
+          email: email || existingUser.email,
           name:
             firstName && lastName
               ? `${firstName} ${lastName}`
@@ -39,18 +41,20 @@ export async function POST() {
                 lastName ||
                 username ||
                 email?.split("@")[0] ||
+                existingUser.name ||
                 "Anonymous",
           username: username || email?.split("@")[0] || userId,
-          avatarUrl: imageUrl,
+          avatarUrl: imageUrl || existingUser.avatarUrl,
           lastActive: new Date(),
         },
       });
     } else {
-      // Create new user
+      // Create new user with generated email if none provided
+      const userEmail = email || `${userId}@courtconnect.app`;
       await prisma.user.create({
         data: {
           clerkId: userId,
-          email,
+          email: userEmail,
           name:
             firstName && lastName
               ? `${firstName} ${lastName}`
@@ -68,7 +72,13 @@ export async function POST() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error syncing user:", error);
-    return NextResponse.json({ error: "Failed to sync user" }, { status: 500 });
+    console.error("Detailed error syncing user:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to sync user",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }

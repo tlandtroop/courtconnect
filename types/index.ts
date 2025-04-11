@@ -41,7 +41,6 @@ export interface Friend {
   name?: string;
   username?: string;
   avatarUrl?: string;
-  rating: number;
 }
 
 export interface UserProfile {

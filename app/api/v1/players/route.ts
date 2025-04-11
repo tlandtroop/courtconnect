@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const skillLevel = searchParams.get("skillLevel");
     const location = searchParams.get("location");
-    const sortBy = searchParams.get("sortBy") || "rating";
+    const sortBy = searchParams.get("sortBy") || "lastActive";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
 
@@ -52,7 +52,11 @@ export async function GET(request: NextRequest) {
       prisma.user.findMany({
         where,
         orderBy:
-          sortBy === "games" ? { gamesPlayed: "desc" } : { [sortBy]: "desc" },
+          sortBy === "games"
+            ? { games: { _count: "desc" } }
+            : sortBy === "recentlyActive"
+            ? { lastActive: "desc" }
+            : { [sortBy]: "desc" },
         skip: (page - 1) * limit,
         take: limit,
         select: {
@@ -63,21 +67,27 @@ export async function GET(request: NextRequest) {
           email: true,
           skillLevel: true,
           location: true,
-          rating: true,
           avatarUrl: true,
-          gamesPlayed: true,
-          winRate: true,
           lastActive: true,
           createdAt: true,
+          _count: {
+            select: {
+              games: true,
+              createdGames: true,
+            },
+          },
         },
       }),
       prisma.user.count({ where }),
     ]);
 
-    // Filter out the current user from the results
-    const filteredPlayers = players.filter(
-      (player) => player.clerkId !== userId
-    );
+    // Filter out the current user from the results and add computed fields
+    const filteredPlayers = players
+      .filter((player) => player.clerkId !== userId)
+      .map((player) => ({
+        ...player,
+        gamesPlayed: player._count.games + player._count.createdGames,
+      }));
 
     return NextResponse.json({
       data: filteredPlayers,

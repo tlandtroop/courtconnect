@@ -21,7 +21,7 @@ export default function DashboardPage() {
       if (!user?.id) return;
 
       try {
-        const response = await fetch(`/api/v1/users?id=${user.id}`);
+        const response = await fetch(`/api/v1/users?clerkId=${user.id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch user profile");
         }
@@ -42,20 +42,12 @@ export default function DashboardPage() {
   }, [user, isLoaded]);
 
   if (!isLoaded || loading) {
-    return <div>Loading...</div>;
+    return;
   }
 
   if (!user) {
     return <div>Please sign in to view your dashboard.</div>;
   }
-
-  // This helper function is kept for potential future personalization features
-  const getTimeOfDay = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "morning";
-    if (hour < 18) return "afternoon";
-    return "evening";
-  };
 
   return (
     <div className="min-h-screen bg-gray-100">

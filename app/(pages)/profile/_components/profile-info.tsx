@@ -41,9 +41,11 @@ const ProfileInfo = ({
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{profile.name}</h1>
-              <Badge variant="secondary" className="text-blue-500 bg-blue-50">
-                {profile.rating.toFixed(1)} Rating
-              </Badge>
+              {profile.skillLevel && (
+                <Badge variant="secondary" className="text-blue-500 bg-blue-50">
+                  {profile.skillLevel}
+                </Badge>
+              )}
             </div>
 
             <p className="text-gray-500">@{profile.username}</p>

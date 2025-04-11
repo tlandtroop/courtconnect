@@ -76,9 +76,6 @@ export async function GET() {
           name,
           username: tempUsername,
           avatarUrl: user.imageUrl,
-          rating: 2.5, // Default rating for new users
-          gamesPlayed: 0,
-          courtsVisited: 0,
         },
       });
 

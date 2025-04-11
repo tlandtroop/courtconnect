@@ -2,26 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import db from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { Court, User } from "@prisma/client";
-
-type CourtWithRelations = Court & {
-  games: Array<{
-    id: string;
-    date: Date;
-    startTime: Date;
-    gameType: string;
-    skillLevel: string;
-    playersNeeded: number;
-    organizer: Pick<
-      User,
-      "id" | "clerkId" | "name" | "username" | "avatarUrl" | "rating"
-    >;
-    participants: Pick<
-      User,
-      "id" | "clerkId" | "name" | "username" | "avatarUrl" | "rating"
-    >[];
-  }>;
-};
 
 // Helper function for consistent error responses
 const errorResponse = (message: string, status: number = 400) => {
@@ -68,7 +48,6 @@ export async function GET(request: NextRequest) {
                     name: true,
                     username: true,
                     avatarUrl: true,
-                    rating: true,
                   },
                 },
                 participants: {
@@ -78,7 +57,6 @@ export async function GET(request: NextRequest) {
                     name: true,
                     username: true,
                     avatarUrl: true,
-                    rating: true,
                   },
                 },
               },

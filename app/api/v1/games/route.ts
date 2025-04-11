@@ -9,13 +9,10 @@ type GameWithRelations = Game & {
     participants: number;
   };
   court: Court;
-  organizer: Pick<
-    User,
-    "id" | "clerkId" | "name" | "username" | "avatarUrl" | "rating"
-  >;
+  organizer: Pick<User, "id" | "clerkId" | "name" | "username" | "avatarUrl">;
   participants: Pick<
     User,
-    "id" | "clerkId" | "name" | "username" | "avatarUrl" | "rating"
+    "id" | "clerkId" | "name" | "username" | "avatarUrl"
   >[];
 };
 
@@ -58,7 +55,6 @@ export async function GET(request: NextRequest) {
                 name: true,
                 username: true,
                 avatarUrl: true,
-                rating: true,
               },
             },
             participants: {
@@ -68,7 +64,6 @@ export async function GET(request: NextRequest) {
                 name: true,
                 username: true,
                 avatarUrl: true,
-                rating: true,
               },
             },
           },
@@ -161,7 +156,6 @@ export async function GET(request: NextRequest) {
               name: true,
               username: true,
               avatarUrl: true,
-              rating: true,
             },
           },
           participants: {
@@ -171,7 +165,6 @@ export async function GET(request: NextRequest) {
               name: true,
               username: true,
               avatarUrl: true,
-              rating: true,
             },
           },
           _count: {
