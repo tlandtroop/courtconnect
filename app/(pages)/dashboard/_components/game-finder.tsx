@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { format } from "date-fns";
@@ -20,16 +20,13 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [sortBy, setSortBy] = useState("date");
+  const [sortBy, setSortBy] = useState<"date" | "players" | "skill">(
+    (initialSortBy as "date" | "players" | "skill") || "date"
+  );
   const [sortOrder, setSortOrder] = useState("asc");
-  const [limit, setLimit] = useState(5);
+  const [limit] = useState(5);
 
-  useEffect(() => {
-    fetchGames();
-  }, [page, initialSortBy]);
-
-  const fetchGames = async () => {
+  const fetchGames = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(
@@ -41,7 +38,6 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
       const data = await response.json();
       if (data.success && data.games) {
         setGames(data.games);
-        setTotalCount(data.pagination?.total || 0);
         setTotalPages(data.pagination?.totalPages || 1);
       }
     } catch (error) {
@@ -49,10 +45,23 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit, sortBy, sortOrder]);
+
+  useEffect(() => {
+    fetchGames();
+  }, [fetchGames]);
 
   const handleViewGame = (gameId: string) => {
     router.push(`/games/${gameId}`);
+  };
+
+  const handleSortChange = (newSortBy: "date" | "players" | "skill") => {
+    if (newSortBy === sortBy) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(newSortBy);
+      setSortOrder("asc");
+    }
   };
 
   const formatGameDate = (dateString: string) => {
@@ -146,6 +155,35 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
         </Card>
       ) : (
         <div className="space-y-4">
+          {/* Add sorting controls */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex gap-2">
+              <Button
+                variant={sortBy === "date" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSortChange("date")}
+              >
+                Date {sortBy === "date" && (sortOrder === "asc" ? "↑" : "↓")}
+              </Button>
+              <Button
+                variant={sortBy === "players" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSortChange("players")}
+              >
+                Players{" "}
+                {sortBy === "players" && (sortOrder === "asc" ? "↑" : "↓")}
+              </Button>
+              <Button
+                variant={sortBy === "skill" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSortChange("skill")}
+              >
+                Skill Level{" "}
+                {sortBy === "skill" && (sortOrder === "asc" ? "↑" : "↓")}
+              </Button>
+            </div>
+          </div>
+
           {games.map((game) => (
             <Card
               key={game.id}

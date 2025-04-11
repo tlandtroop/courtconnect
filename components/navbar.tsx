@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,8 +12,6 @@ import {
   MapPin,
   User,
   LogOut,
-  Search,
-  Bell,
 } from "lucide-react";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
@@ -26,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Badge } from "./ui/badge";
 
 const Navbar = () => {
   const { user } = useUser();
