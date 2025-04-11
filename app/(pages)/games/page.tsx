@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import GameFinder from "@/app/(pages)/dashboard/_components/game-finder";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,13 +28,7 @@ export default function GamesPage() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"date" | "players" | "skill">("date");
 
-  useEffect(() => {
-    if (isLoaded && user && activeTab === "my-games") {
-      fetchMyGames();
-    }
-  }, [isLoaded, user, activeTab]);
-
-  const fetchMyGames = async () => {
+  const fetchMyGames = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -67,7 +61,13 @@ export default function GamesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (isLoaded && user && activeTab === "my-games") {
+      fetchMyGames();
+    }
+  }, [isLoaded, user, activeTab, fetchMyGames]);
 
   // Helper function to check if a date is today or in the future
   const isDateTodayOrFuture = (dateString: string) => {

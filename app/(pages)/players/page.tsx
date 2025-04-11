@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { Search, MapPin, Filter, UserPlus, Loader2, Check } from "lucide-react";
@@ -78,7 +78,7 @@ export default function PlayersPage() {
 
   const playersPerPage = 10;
 
-  const fetchPlayers = async () => {
+  const fetchPlayers = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -110,24 +110,25 @@ export default function PlayersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, locationFilter, sortBy, currentPage, playersPerPage]);
+
+  const debouncedSearch = useCallback(() => {
+    if (user) {
+      setCurrentPage(1);
+      fetchPlayers();
+    }
+  }, [user, fetchPlayers]);
 
   useEffect(() => {
     if (user) {
       fetchPlayers();
     }
-  }, [currentPage, sortBy, locationFilter, user]);
+  }, [user, fetchPlayers]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (user) {
-        setCurrentPage(1);
-        fetchPlayers();
-      }
-    }, 300);
-
+    const timer = setTimeout(debouncedSearch, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, locationFilter]);
+  }, [searchQuery, locationFilter, debouncedSearch]);
 
   const getTimeAgo = (dateString: string) => {
     if (!dateString) return "Never";

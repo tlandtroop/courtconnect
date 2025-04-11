@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
@@ -23,7 +23,7 @@ export default function ProfilePage() {
   const userId = params.userId as string;
   const isOwnProfile = currentUser?.id === userId;
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       const response = await fetch(`/api/v1/users?id=${params.userId}`);
       if (!response.ok) {
@@ -41,17 +41,17 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.userId]);
 
   useEffect(() => {
     if (params.userId) {
       fetchUserProfile();
     }
-  }, [params.userId]);
+  }, [params.userId, fetchUserProfile]);
 
-  const handleProfileUpdated = () => {
+  const handleProfileUpdated = useCallback(() => {
     fetchUserProfile();
-  };
+  }, [fetchUserProfile]);
 
   if (!loading && !userProfile) {
     return (
