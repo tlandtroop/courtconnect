@@ -1,13 +1,21 @@
 export interface Court {
   id: string;
   name: string;
+  description?: string;
   latitude: number;
   longitude: number;
   city?: string;
   state?: string;
   address?: string;
   zipCode?: string;
+  courtType?: string;
   amenities: string[];
+  images: string[];
+  reviewCount: number;
+  rating: number;
+  isOpen: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Game {

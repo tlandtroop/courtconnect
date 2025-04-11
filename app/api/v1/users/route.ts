@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import prisma from "@/lib/db";
+import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 // Helper function for consistent error responses
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     return withAuth(async () => {
       try {
         if (type === "dashboard") {
-          const user = await prisma.user.findUnique({
+          const user = await db.user.findUnique({
             where: { clerkId: userId },
             select: {
               id: true,
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
           return successResponse({ user });
         } else {
-          const user = await prisma.user.findUnique({
+          const user = await db.user.findUnique({
             where: { clerkId: userId },
             include: {
               games: {
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
   // Get current user
   return withAuth(async (userId: string) => {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { clerkId: userId },
       });
 
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
         return errorResponse("Missing required fields");
       }
 
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { clerkId: userId },
       });
 
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           return errorResponse("Friend ID is required");
         }
 
-        const friend = await prisma.user.findUnique({
+        const friend = await db.user.findUnique({
           where: { id: friendId },
         });
 
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
           return errorResponse("Cannot add yourself as a friend");
         }
 
-        const alreadyFriends = await prisma.user.findFirst({
+        const alreadyFriends = await db.user.findFirst({
           where: {
             id: user.id,
             friends: {
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
           return errorResponse("Already friends with this user");
         }
 
-        await prisma.user.update({
+        await db.user.update({
           where: { id: user.id },
           data: {
             friends: {
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        await prisma.user.update({
+        await db.user.update({
           where: { id: friend.id },
           data: {
             friends: {
@@ -224,7 +224,7 @@ export async function PATCH(request: NextRequest) {
       const body = await request.json();
       const { username, bio, location } = body;
 
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { clerkId: userId },
       });
 
@@ -233,7 +233,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       if (username) {
-        const existingUser = await prisma.user.findFirst({
+        const existingUser = await db.user.findFirst({
           where: {
             username,
             NOT: {
@@ -247,7 +247,7 @@ export async function PATCH(request: NextRequest) {
         }
       }
 
-      const updatedUser = await prisma.user.update({
+      const updatedUser = await db.user.update({
         where: { id: user.id },
         data: {
           username,

@@ -23,7 +23,7 @@ model User {
   skillLevel    String    @default("beginner") // "beginner", "intermediate", "advanced", "expert"
   lastActive    DateTime  @default(now())
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  updatedAt     DateTime @updatedAt
 
   // Relationships
   games         Game[]    @relation("GameParticipants")
@@ -36,21 +36,22 @@ model User {
 }
 
 model Court {
-  id          String   @id @default(cuid())
-  name        String
-  description String?  @db.Text
-  latitude    Float
-  longitude   Float
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
-  courtType   String?
-  amenities   String[] @default([])
-  images      String[]
-  reviewCount Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  description   String?  @db.Text
+  latitude      Float
+  longitude     Float
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  courtType     String?
+  amenities     String[] @default([])
+  images        String[]
+  reviewCount   Int      @default(0)
+  googlePlaceId String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relationships
   games     Game[]

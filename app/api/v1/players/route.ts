@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import prisma from "@/lib/db";
+import { db } from "@/lib/db";
 
 type WhereClause = {
   id?: { not: string };
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     }
 
     const [players, total, currentUser] = await Promise.all([
-      prisma.user.findMany({
+      db.user.findMany({
         where,
         orderBy:
           sortBy === "games"
@@ -78,8 +78,8 @@ export async function GET(request: NextRequest) {
           },
         },
       }),
-      prisma.user.count({ where }),
-      prisma.user.findUnique({
+      db.user.count({ where }),
+      db.user.findUnique({
         where: { clerkId: userId },
         select: {
           friends: {

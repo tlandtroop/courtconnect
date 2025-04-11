@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import prisma from "@/lib/db";
+import { db } from "@/lib/db";
 
 export async function POST() {
   try {
@@ -29,13 +29,13 @@ export async function POST() {
     const username = user.username || email.split("@")[0];
 
     // Check if user exists in database
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await db.user.findUnique({
       where: { clerkId: userId },
     });
 
     if (existingUser) {
       // Update existing user
-      const updatedUser = await prisma.user.update({
+      const updatedUser = await db.user.update({
         where: { clerkId: userId },
         data: {
           email,
@@ -49,7 +49,7 @@ export async function POST() {
       return NextResponse.json({ success: true, user: updatedUser });
     } else {
       // Create new user
-      const newUser = await prisma.user.create({
+      const newUser = await db.user.create({
         data: {
           clerkId: userId,
           email,
