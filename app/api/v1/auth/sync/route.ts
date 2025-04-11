@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/db";
 
 export async function POST() {
@@ -9,19 +9,27 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user data from Clerk
-    const { sessionClaims } = await auth();
-    if (!sessionClaims) {
+    // Get user data directly from Clerk
+    const user = await currentUser();
+    if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    console.log("Session claims:", sessionClaims);
+    console.log("Clerk user data:", JSON.stringify(user, null, 2));
 
-    const email = sessionClaims.email as string;
-    const firstName = sessionClaims.firstName as string;
-    const lastName = sessionClaims.lastName as string;
-    const username = sessionClaims.username as string;
-    const imageUrl = sessionClaims.imageUrl as string;
+    const email = user.emailAddresses[0]?.emailAddress;
+    const firstName = user.firstName;
+    const lastName = user.lastName;
+    const username = user.username;
+    const imageUrl = user.imageUrl;
+
+    console.log("Extracted data:", {
+      email,
+      firstName,
+      lastName,
+      username,
+      imageUrl,
+    });
 
     // Check if user exists in database
     const existingUser = await prisma.user.findUnique({
