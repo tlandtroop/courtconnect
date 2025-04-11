@@ -15,19 +15,73 @@ const CourtAvailability = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [error, setError] = useState<string | null>(null);
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number }>({
+    lat: 37.7749, // Default coordinates (San Francisco)
+    lng: -122.4194
+  });
+
+  useEffect(() => {
+    // Get user's current location if available
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoordinates({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        () => {
+          console.warn("Unable to retrieve user location, using default");
+        }
+      );
+    }
+  }, []);
 
   useEffect(() => {
     const fetchCourts = async () => {
       try {
-        const response = await fetch("/api/v1/courts");
+        // Replace with your actual API key
+        const apiKey = 'AIzaSyAN4IuwoiIkOxK7cvjvF6sWwvdlVPAP6qY';
+        
+        // Parameters for the request
+        const radius = 5000; // Search radius in meters (5km)
+        const type = 'sports_courts'; // Types of places to search for
+        const keyword = 'basketball court|tennis court|soccer field|pickleball';
+        
+        // Build the Places API URL for Nearby Search
+        // In production, this should be handled by your backend API
+        const url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?keyword=courts&location=29.646109782755214%2C-82.3473261855842&radius=5000&key=AIzaSyAN4IuwoiIkOxK7cvjvF6sWwvdlVPAP6qY";
+        
+        const response = await fetch(url);
+        
         if (!response.ok) {
           throw new Error("Failed to load courts");
         }
+        
         const data = await response.json();
-        if (data.success && data.courts) {
-          setCourts(data.courts as Court[]);
+
+        console.log(data)
+        
+        if (data.status === "OK" && data.results) {
+          // Transform the Places API results to match your Court interface
+          const transformedCourts: Court[] = data.results.map((place: any) => {
+            // Extract city from vicinity (address)
+            const addressParts = place.vicinity ? place.vicinity.split(',') : [];
+            const city = addressParts.length > 0 ? addressParts[addressParts.length - 1].trim() : '';
+            
+            return {
+              id: place.place_id,
+              name: place.name,
+              address: place.vicinity || '',
+              city: city,
+              state: '', // Google Places API doesn't directly provide state
+              // Add any other required properties from your Court interface
+            };
+          });
+          
+          setCourts(transformedCourts);
         } else {
-          setError(data.error || "Failed to load courts");
+          setError(data.error_message || "No courts found in your area");
         }
       } catch (error) {
         console.error("Error fetching courts:", error);
@@ -38,7 +92,7 @@ const CourtAvailability = () => {
     };
 
     fetchCourts();
-  }, []);
+  }, [coordinates]);
 
   const today = new Date();
   const tomorrow = new Date(today);
@@ -47,6 +101,9 @@ const CourtAvailability = () => {
   dayAfter.setDate(dayAfter.getDate() + 2);
 
   const dates = [today, tomorrow, dayAfter];
+
+  // Default time slots used in your original code
+  const defaultTimeSlots = ["8:00 AM", "10:00 AM", "2:00 PM", "4:00 PM"];
 
   return (
     <Card>
@@ -98,7 +155,7 @@ const CourtAvailability = () => {
                   <div>
                     <h3 className="font-medium">{court.name}</h3>
                     <p className="text-sm text-gray-500">
-                      {court.city}, {court.state}
+                      {court.city}{court.state ? `, ${court.state}` : ''}
                     </p>
                   </div>
                   <div className="flex flex-col items-end">
@@ -116,7 +173,7 @@ const CourtAvailability = () => {
                   </div>
                 </div>
                 <div className="mt-2 flex gap-2">
-                  {["8:00 AM", "10:00 AM", "2:00 PM", "4:00 PM"].map((time) => (
+                  {defaultTimeSlots.map((time) => (
                     <Badge
                       key={time}
                       variant="outline"
