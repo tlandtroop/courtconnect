@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { Court } from "@prisma/client";
 
 interface GoogleMapsProps {
   searchValue: string;
+  courts: Court[];
 }
 
-const GoogleMaps = ({ searchValue }: GoogleMapsProps) => {
+const GoogleMaps = ({ searchValue, courts }: GoogleMapsProps) => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API;
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number }>({
     lat: 29.652, // Default to Gainesville
@@ -45,6 +47,11 @@ const GoogleMaps = ({ searchValue }: GoogleMapsProps) => {
     );
   }
 
+  // Create markers for each court
+  const markers = courts
+    .map((court) => `&markers=color:red%7C${court.latitude},${court.longitude}`)
+    .join("");
+
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="bg-gray-200 h-[600px] rounded-lg flex items-center justify-center">
@@ -62,7 +69,8 @@ const GoogleMaps = ({ searchValue }: GoogleMapsProps) => {
             coordinates.lat +
             "," +
             coordinates.lng +
-            "&zoom=15"
+            "&zoom=15" +
+            markers
           }
           suppressHydrationWarning
         ></iframe>

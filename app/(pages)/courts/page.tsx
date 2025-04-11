@@ -10,9 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function CourtsPage() {
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchValue, setSearchValue] = useState(
-    "sports+courts"
-  );
+  const [searchValue, setSearchValue] = useState("sports+courts");
   const [checkedPickle, setCheckedPickle] = useState(false);
   const [checkedBasket, setCheckedBasket] = useState(false);
   const [checkedTennis, setCheckedTennis] = useState(false);
