@@ -11,7 +11,7 @@ export default function CourtsPage() {
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState(
-    "sports+courts+in+Gainesville+within+5+miles"
+    "sports+courts"
   );
   const [checkedPickle, setCheckedPickle] = useState(false);
   const [checkedBasket, setCheckedBasket] = useState(false);
