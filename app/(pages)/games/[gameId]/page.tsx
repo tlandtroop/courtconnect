@@ -188,7 +188,7 @@ export default function GameDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center min-h-[60vh]">
             <div className="flex flex-col items-center gap-2">

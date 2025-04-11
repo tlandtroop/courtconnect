@@ -15,13 +15,11 @@ interface GamesProps {
 }
 
 const Games = ({ profile, isOwnProfile }: GamesProps) => {
-  // Check if a date is in the past
   const isInPast = (dateString: string) => {
     try {
       const inputDate = new Date(dateString);
       const today = new Date();
 
-      // Compare only the date parts by setting time to midnight
       const inputDateOnly = new Date(inputDate);
       inputDateOnly.setHours(0, 0, 0, 0);
 
@@ -35,10 +33,8 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
     }
   };
 
-  // Get all games regardless of which array they're in
   const allGames = [...(profile.createdGames || []), ...(profile.games || [])];
 
-  // Remove duplicates by ID
   const uniqueGames = Array.from(
     new Map(allGames.map((game) => [game.id, game])).values()
   );
@@ -110,7 +106,7 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
               {isOwnProfile && (
                 <div className="mt-4">
                   <Link href="/schedule">
-                    <Button className="w-full sm:w-auto">
+                    <Button variant="outline" className="w-full sm:w-auto">
                       <Calendar className="w-4 h-4 mr-2" />
                       Schedule a Game
                     </Button>

@@ -31,12 +31,14 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[#f8fafc] bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px]`}
         >
-          <Navbar />
-          <AuthSync />
-          {children}
-          <Toaster />
+          <div className="min-h-screen">
+            <Navbar />
+            <AuthSync />
+            <main className="container mx-auto px-4 py-8">{children}</main>
+            <Toaster />
+          </div>
         </body>
       </html>
     </ClerkProvider>

@@ -17,7 +17,7 @@ const ProfileInfo = ({
   setIsEditDialogOpen,
 }: ProfileInfoProps) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6 border">
       <div className="h-48 w-full bg-gradient-to-r from-blue-400 to-blue-600 relative"></div>
 
       <div className="p-6 relative">
