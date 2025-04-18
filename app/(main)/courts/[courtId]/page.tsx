@@ -4,50 +4,26 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  Star,
-  Users,
-  ChevronRight,
-  Plus,
-} from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CourtGameParticipant {
   id: string;
-  clerkId: string;
   name: string | null;
-  username: string | null;
   avatarUrl: string | null;
-  rating: number;
 }
 
 interface CourtGame {
   id: string;
   date: Date;
   startTime: Date;
-  endTime: Date | null;
   gameType: string;
   skillLevel: string;
   playersNeeded: number;
-  notes: string | null;
-  status: string;
   participants: CourtGameParticipant[];
-  organizer: CourtGameParticipant;
 }
 
 interface CourtDetail {
@@ -59,12 +35,9 @@ interface CourtDetail {
   address: string | null;
   city: string | null;
   state: string | null;
-  zipCode: string | null;
   courtType: string | null;
   amenities: string[];
   images: string[];
-  rating: number;
-  reviewCount: number;
   games: CourtGame[];
 }
 
@@ -102,7 +75,7 @@ export default function CourtDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen ">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-8 py-12">
           <div className="flex items-center justify-center h-64">
             <p className="text-gray-500">Loading court details...</p>
@@ -114,7 +87,7 @@ export default function CourtDetailPage() {
 
   if (error || !court) {
     return (
-      <div className="min-h-screen ">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-8 py-12">
           <div className="flex flex-col items-center justify-center h-64">
             <p className="text-red-500">{error || "Court not found"}</p>
@@ -130,108 +103,81 @@ export default function CourtDetailPage() {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-8 py-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center text-sm text-gray-500 mb-6">
-          <Link href="/courts" className="hover:text-blue-600">
-            Courts
-          </Link>
-          <ChevronRight className="h-4 w-4 mx-2" />
-          <span className="font-medium text-gray-700">{court.name}</span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content - Court Info */}
-          <div className="col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-6">
             {/* Court Header */}
             <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl">{court.name}</CardTitle>
-                    <CardDescription className="flex items-center mt-1">
-                      <MapPin className="h-4 w-4 mr-1 text-gray-500" />
-                      {court.address || `${court.city}, ${court.state}`}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center space-x-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full">
-                    <Star className="h-4 w-4 fill-blue-500 text-blue-500" />
-                    <span className="text-sm text-gray-500">
-                      ({court.reviewCount})
-                    </span>
-                  </div>
+              <CardHeader>
+                <CardTitle className="text-2xl">{court.name}</CardTitle>
+                <div className="flex items-center text-sm text-gray-500 mt-1">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {court.address || `${court.city}, ${court.state}`}
                 </div>
               </CardHeader>
 
-              <CardContent>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {/* Court Type */}
-                  {court.courtType && (
-                    <Badge variant="outline" className="bg-gray-50">
-                      {court.courtType}
-                    </Badge>
-                  )}
-
-                  {/* Amenities */}
-                  {court.amenities &&
-                    court.amenities.map((amenity: string) => (
-                      <Badge
-                        key={amenity}
-                        variant="outline"
-                        className="bg-gray-50"
-                      >
-                        {amenity}
-                      </Badge>
-                    ))}
-                </div>
-
-                {/* Court Image or Map Placeholder */}
-                <div className="mt-6 relative rounded-lg overflow-hidden bg-gray-200 h-64 flex items-center justify-center">
+              <CardContent className="space-y-6">
+                {/* Court Image */}
+                <div className="relative rounded-lg overflow-hidden bg-gray-200 h-64">
                   {court.images && court.images.length > 0 ? (
                     <Image
                       src={court.images[0]}
                       alt={court.name}
-                      width={800}
-                      height={400}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
-                    <div className="text-gray-400">
-                      Court image not available
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                      No image available
                     </div>
                   )}
                 </div>
 
                 {/* Court Description */}
                 {court.description && (
-                  <div className="mt-6">
-                    <h3 className="font-medium text-gray-800 mb-2">
-                      Description
-                    </h3>
+                  <div>
+                    <h3 className="font-medium text-gray-800 mb-2">About</h3>
                     <p className="text-gray-600">{court.description}</p>
                   </div>
                 )}
-              </CardContent>
 
-              <CardFooter className="flex flex-col sm:flex-row gap-3 justify-between pt-2 border-t">
-                <div className="flex items-center text-sm text-gray-500">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>Available 6:00 AM - 10:00 PM</span>
+                {/* Court Type and Amenities */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Court Type */}
+                  {court.courtType && (
+                    <div>
+                      <h3 className="font-medium text-gray-800 mb-2">
+                        Court Type
+                      </h3>
+                      <p className="text-gray-600">{court.courtType}</p>
+                    </div>
+                  )}
+
+                  {/* Amenities */}
+                  {court.amenities && court.amenities.length > 0 && (
+                    <div>
+                      <h3 className="font-medium text-gray-800 mb-2">
+                        Amenities
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {court.amenities.map((amenity) => (
+                          <span
+                            key={amenity}
+                            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                          >
+                            {amenity}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <Link
-                  href={`/schedule?courtId=${court.id}`}
-                  className="w-full sm:w-auto"
-                >
-                  <Button className="w-full">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Schedule Game Here
-                  </Button>
-                </Link>
-              </CardFooter>
+              </CardContent>
             </Card>
 
-            {/* Upcoming Games at this Court */}
+            {/* Upcoming Games */}
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -247,118 +193,84 @@ export default function CourtDetailPage() {
               <CardContent>
                 {court.games && court.games.length > 0 ? (
                   <div className="space-y-4">
-                    {court.games.map((game: CourtGame) => (
-                      <Link href={`/games/${game.id}`} key={game.id}>
-                        <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                          <div className="space-y-1">
-                            <div className="font-medium">{game.gameType}</div>
-                            <div className="text-sm text-gray-500">
-                              <Badge variant="outline" className="mr-2">
-                                {game.skillLevel}
-                              </Badge>
-                              <span className="inline-flex items-center">
-                                <Users className="h-3 w-3 mr-1" />
-                                {game.participants.length}/{game.playersNeeded}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium">
+                    {court.games.map((game) => (
+                      <div
+                        key={game.id}
+                        className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium">{game.gameType}</h3>
+                            <p className="text-sm text-gray-500">
+                              {format(new Date(game.date), "EEEE, MMMM d")} at{" "}
                               {format(new Date(game.startTime), "h:mm a")}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {format(new Date(game.date), "MMM d, yyyy")}
-                            </div>
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {game.skillLevel} • {game.participants.length}/
+                              {game.playersNeeded} players
+                            </p>
                           </div>
+                          <Link href={`/games/${game.id}`}>
+                            <Button variant="outline" size="sm">
+                              View Game
+                            </Button>
+                          </Link>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-gray-500">
-                    <Calendar className="h-10 w-10 mx-auto mb-2 text-gray-400" />
-                    <p>No upcoming games at this court</p>
-                    <Link href={`/schedule?courtId=${court.id}`}>
-                      <Button variant="link" className="mt-2">
-                        Schedule a game
-                      </Button>
-                    </Link>
+                  <div className="text-center py-8 text-gray-500">
+                    No upcoming games scheduled
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Sidebar */}
+          {/* Right Sidebar */}
           <div className="space-y-6">
-            {/* Location Info */}
+            {/* Location Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Location</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-200 rounded-lg h-48 mb-4 flex items-center justify-center">
-                  {/* Map placeholder - would be replaced with actual map component */}
-                  <MapPin className="h-8 w-8 text-gray-400" />
-                </div>
-                <div className="text-sm text-gray-600">
-                  <p className="mb-1">{court.address}</p>
-                  <p>
-                    {court.city}, {court.state} {court.zipCode}
-                  </p>
-                </div>
-              </CardContent>
-              <CardFooter className="pt-0">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() =>
-                    window.open(
-                      `https://maps.google.com/?q=${court.latitude},${court.longitude}`,
-                      "_blank"
-                    )
-                  }
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Open in Maps
-                </Button>
-              </CardFooter>
-            </Card>
-
-            {/* Court Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Court Details</CardTitle>
+                <CardTitle>Location</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <div className="font-medium mb-2">Amenities</div>
-                  <div className="flex flex-wrap gap-2">
-                    {court.amenities && court.amenities.length > 0 ? (
-                      court.amenities.map((amenity: string) => (
-                        <Badge
-                          key={amenity}
-                          className="bg-blue-50 text-blue-700 border-blue-200"
-                        >
-                          {amenity}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-sm text-gray-500">
-                        No amenities listed
-                      </span>
+                <div className="flex items-start space-x-3">
+                  <div className="bg-blue-50 p-2 rounded-full">
+                    <MapPin className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <a
+                      href={`https://www.google.com/maps/place/${encodeURIComponent(
+                        court.address || court.name
+                      )}/@${court.latitude},${court.longitude},17z`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-gray-600 hover:text-blue-600"
+                    >
+                      {court.address}
+                    </a>
+                    {court.city && court.state && (
+                      <p className="text-sm text-gray-500">
+                        {court.city}, {court.state}
+                      </p>
                     )}
                   </div>
                 </div>
-
-                <Separator />
-
-                <div>
-                  <div className="font-medium mb-2">Court Type</div>
-                  <Badge className="bg-green-50 text-green-700 border-green-200">
-                    {court.courtType || "Not specified"}
-                  </Badge>
-                </div>
+                <a
+                  href={`https://www.google.com/maps/place/${encodeURIComponent(
+                    court.address || court.name
+                  )}/@${court.latitude},${court.longitude},17z`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full"
+                >
+                  <Button variant="outline" className="w-full">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Open in Google Maps
+                  </Button>
+                </a>
               </CardContent>
             </Card>
           </div>

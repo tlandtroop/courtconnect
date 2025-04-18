@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import GameFinder from "@/app/(main)/dashboard/_components/game-finder";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
@@ -101,11 +102,8 @@ export default function DashboardPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Upcoming Games</h2>
-          <Link
-            href="/games"
-            className="text-blue-600 hover:text-blue-800 text-sm"
-          >
-            View All Games →
+          <Link href="/games">
+            <Button variant="ghost">View All Games →</Button>
           </Link>
         </div>
         <GameFinder initialSortBy="date" />
