@@ -12,7 +12,7 @@ interface FriendsProps {
 
 const Friends = ({ profile, isOwnProfile }: FriendsProps) => {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden h-full">
       <CardHeader className="py-3 bg-gray-50">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -21,7 +21,7 @@ const Friends = ({ profile, isOwnProfile }: FriendsProps) => {
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-4 max-h-[600px] overflow-y-auto">
         {profile.friends.length === 0 ? (
           <div className="text-center text-gray-500 py-4">
             No friends added yet.

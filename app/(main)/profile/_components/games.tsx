@@ -39,45 +39,30 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
     new Map(allGames.map((game) => [game.id, game])).values()
   );
 
-  // Split into upcoming and past games
-  const upcomingGames = uniqueGames.filter((game) => !isInPast(game.date));
-  const pastGames = uniqueGames.filter((game) => isInPast(game.date));
-
-  // Format the game date for display
-  const renderGameDate = (date: string) => {
-    const gameDate = new Date(date);
-    const today = new Date();
-
-    // Reset time parts to midnight for comparison
-    const gameDateOnly = new Date(gameDate);
-    gameDateOnly.setHours(0, 0, 0, 0);
-
-    const todayOnly = new Date(today);
-    todayOnly.setHours(0, 0, 0, 0);
-
-    // Check if it's today
-    if (gameDateOnly.getTime() === todayOnly.getTime()) {
-      return "Today";
-    }
-
-    // Check if it's tomorrow
-    const tomorrowOnly = new Date(todayOnly);
-    tomorrowOnly.setDate(todayOnly.getDate() + 1);
-
-    if (gameDateOnly.getTime() === tomorrowOnly.getTime()) {
-      return "Tomorrow";
-    }
-
-    return formatDistanceToNow(gameDate, { addSuffix: true });
-  };
+  console.log("Game data example:", uniqueGames[0]);
 
   // Format time for display
-  const formatTime = (timeString: string) => {
+  const formatTime = (
+    timeString: string | Date | undefined,
+    date: string | Date
+  ) => {
     try {
-      const date = new Date(timeString);
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
+      // If timeString is undefined, use the time from the date field
+      if (!timeString) {
+        const dateTime = new Date(date);
+        return dateTime.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+      }
+
+      const dateObj =
+        typeof timeString === "string" ? new Date(timeString) : timeString;
+      return dateObj.toLocaleTimeString("en-US", {
+        hour: "numeric",
         minute: "2-digit",
+        hour12: true,
       });
     } catch (error) {
       console.error("Time formatting error:", error);
@@ -85,21 +70,89 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
     }
   };
 
+  // Format the game date for display
+  const renderGameDate = (date: string | Date) => {
+    try {
+      // Convert to string if it's a Date object
+      const dateString =
+        typeof date === "object" && date instanceof Date
+          ? date.toISOString()
+          : String(date);
+
+      console.log("Formatting date:", {
+        original: date,
+        converted: dateString,
+      });
+
+      const gameDate = new Date(dateString);
+      const today = new Date();
+
+      // Reset time parts to midnight for comparison
+      const gameDateOnly = new Date(gameDate);
+      gameDateOnly.setHours(0, 0, 0, 0);
+
+      const todayOnly = new Date(today);
+      todayOnly.setHours(0, 0, 0, 0);
+
+      // Check if it's today
+      if (gameDateOnly.getTime() === todayOnly.getTime()) {
+        return "Today";
+      }
+
+      // Check if it's tomorrow
+      const tomorrowOnly = new Date(todayOnly);
+      tomorrowOnly.setDate(todayOnly.getDate() + 1);
+
+      if (gameDateOnly.getTime() === tomorrowOnly.getTime()) {
+        return "Tomorrow";
+      }
+
+      // If the date is invalid, return a fallback
+      if (isNaN(gameDate.getTime())) {
+        console.log("Invalid date:", { date, gameDate });
+        return "Date unavailable";
+      }
+
+      return formatDistanceToNow(gameDate, { addSuffix: true });
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "Date unavailable";
+    }
+  };
+
+  // Split into upcoming and past games
+  const upcomingGames = uniqueGames.filter((game) => !isInPast(game.date));
+  const pastGames = uniqueGames.filter((game) => isInPast(game.date));
+
   console.log("Game counts:", {
     all: uniqueGames.length,
     upcoming: upcomingGames.length,
     past: pastGames.length,
   });
 
+  // Log the first upcoming game for debugging
+  if (upcomingGames.length > 0) {
+    console.log("First upcoming game:", {
+      id: upcomingGames[0].id,
+      date: upcomingGames[0].date,
+      startTime: upcomingGames[0].startTime,
+      playersNeeded: upcomingGames[0].playersNeeded,
+      participants: upcomingGames[0].participants?.length,
+    });
+  }
+
   return (
-    <Card className="overflow-hidden">
-      <Tabs defaultValue="upcoming" className="w-full">
+    <Card className="overflow-hidden h-full">
+      <Tabs defaultValue="upcoming" className="w-full h-full flex flex-col">
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="upcoming">Upcoming Games</TabsTrigger>
           <TabsTrigger value="history">Game History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upcoming" className="p-6">
+        <TabsContent
+          value="upcoming"
+          className="p-6 max-h-[600px] overflow-y-auto flex-1"
+        >
           {upcomingGames.length === 0 ? (
             <div className="text-center text-gray-500 py-6">
               No upcoming games.
@@ -138,7 +191,7 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
                         </div>
                         <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
                           <Clock className="w-3 h-3" />
-                          {formatTime(game.startTime)}
+                          {formatTime(game.startTime, game.date)}
                         </div>
                       </div>
                     </div>
@@ -186,9 +239,7 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
                         )}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {game.participants
-                          ? `${game.participants.length}/${game.playersNeeded}`
-                          : `0/${game.playersNeeded}`}{" "}
+                        {game.participants?.length || 0}/{game.playersNeeded}{" "}
                         players
                       </div>
                     </div>
@@ -199,7 +250,10 @@ const Games = ({ profile, isOwnProfile }: GamesProps) => {
           )}
         </TabsContent>
 
-        <TabsContent value="history" className="p-6">
+        <TabsContent
+          value="history"
+          className="p-6 max-h-[600px] overflow-y-auto flex-1"
+        >
           {pastGames.length === 0 ? (
             <div className="text-center text-gray-500 py-6">
               No game history available.

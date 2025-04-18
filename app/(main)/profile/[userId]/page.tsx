@@ -6,10 +6,8 @@ import { useUser } from "@clerk/nextjs";
 
 import ProfileEditDialog from "@/app/(main)/profile/_components/profile-edit-dialog";
 import Friends from "@/app/(main)/profile/_components/friends";
-import FavoriteCourts from "@/app/(main)/profile/_components/favorite-courts";
 import Games from "@/app/(main)/profile/_components/games";
 import { UserProfile } from "@/types";
-// import ProfileLoader from "@/app/(pages)/profile/_components/loader";
 import ProfileNotFound from "@/app/(main)/profile/_components/not-found";
 import ProfileInfo from "@/app/(main)/profile/_components/profile-info";
 
@@ -72,17 +70,9 @@ export default function ProfilePage() {
               setIsEditDialogOpen={setIsEditDialogOpen}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <Games profile={userProfile} isOwnProfile={isOwnProfile} />
-                <Friends profile={userProfile} isOwnProfile={isOwnProfile} />
-              </div>
-              <div>
-                <FavoriteCourts
-                  profile={userProfile}
-                  isOwnProfile={isOwnProfile}
-                />
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-300px)]">
+              <Games profile={userProfile} isOwnProfile={isOwnProfile} />
+              <Friends profile={userProfile} isOwnProfile={isOwnProfile} />
             </div>
           </>
         )}

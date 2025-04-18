@@ -62,12 +62,22 @@ export async function GET(request: NextRequest) {
                 select: {
                   id: true,
                   date: true,
+                  startTime: true,
                   gameType: true,
                   skillLevel: true,
+                  playersNeeded: true,
                   court: {
                     select: {
                       id: true,
                       name: true,
+                    },
+                  },
+                  participants: {
+                    select: {
+                      id: true,
+                      name: true,
+                      username: true,
+                      avatarUrl: true,
                     },
                   },
                 },
@@ -76,12 +86,22 @@ export async function GET(request: NextRequest) {
                 select: {
                   id: true,
                   date: true,
+                  startTime: true,
                   gameType: true,
                   skillLevel: true,
+                  playersNeeded: true,
                   court: {
                     select: {
                       id: true,
                       name: true,
+                    },
+                  },
+                  participants: {
+                    select: {
+                      id: true,
+                      name: true,
+                      username: true,
+                      avatarUrl: true,
                     },
                   },
                 },
