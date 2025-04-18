@@ -368,7 +368,33 @@ export async function PATCH(request: NextRequest) {
       }
 
       if (action === "join") {
-        if (new Date(game.date) < new Date()) {
+        // Parse the game date and time in local timezone
+        const gameDate = new Date(game.date);
+        const gameTime = new Date(game.startTime);
+
+        // Create date objects for comparison without time components
+        const now = new Date();
+        const nowDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
+        const gameDateOnly = new Date(
+          gameDate.getFullYear(),
+          gameDate.getMonth(),
+          gameDate.getDate()
+        );
+
+        // If the game is on a future date, it's definitely not in progress
+        if (gameDateOnly > nowDate) {
+          // Game is in the future, allow joining
+        } else if (gameDateOnly.getTime() === nowDate.getTime()) {
+          // Game is today, compare the times
+          if (now > gameTime) {
+            return errorResponse("Cannot join a game that has already started");
+          }
+        } else {
+          // Game is on a past date
           return errorResponse(
             "Cannot join a game that has already taken place"
           );

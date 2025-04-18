@@ -104,7 +104,32 @@ export default function GameDetailPage() {
     const checkGameTime = () => {
       const now = new Date();
       const gameTime = new Date(game.startTime);
-      setIsGameInProgress(now > gameTime);
+
+      // Create date objects for comparison without time components
+      const nowDate = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      );
+      const gameDate = new Date(
+        gameTime.getFullYear(),
+        gameTime.getMonth(),
+        gameTime.getDate()
+      );
+
+      // If the game is on a future date, it's definitely not in progress
+      if (gameDate > nowDate) {
+        setIsGameInProgress(false);
+        return;
+      }
+
+      // If the game is today, compare the times
+      if (gameDate.getTime() === nowDate.getTime()) {
+        setIsGameInProgress(now > gameTime);
+      } else {
+        // If the game is on a past date, it's in progress
+        setIsGameInProgress(true);
+      }
     };
 
     // Check immediately
