@@ -96,11 +96,80 @@ export async function GET(request: NextRequest) {
         today.setHours(0, 0, 0, 0);
 
         const whereClause = {
-          OR: [
-            { organizerId: user.id },
-            { participants: { some: { id: user.id } } },
+          AND: [
+            {
+              OR: [
+                { organizerId: user.id },
+                { participants: { some: { id: user.id } } },
+              ],
+            },
+            {
+              OR:
+                type === "upcoming"
+                  ? [
+                      {
+                        // Games on a future date
+                        date: {
+                          gt: new Date(
+                            today.getFullYear(),
+                            today.getMonth(),
+                            today.getDate()
+                          ),
+                        },
+                      },
+                      {
+                        // Games today but haven't started yet
+                        AND: [
+                          {
+                            date: {
+                              equals: new Date(
+                                today.getFullYear(),
+                                today.getMonth(),
+                                today.getDate()
+                              ),
+                            },
+                          },
+                          {
+                            startTime: {
+                              gt: new Date(),
+                            },
+                          },
+                        ],
+                      },
+                    ]
+                  : [
+                      {
+                        // Games on a past date
+                        date: {
+                          lt: new Date(
+                            today.getFullYear(),
+                            today.getMonth(),
+                            today.getDate()
+                          ),
+                        },
+                      },
+                      {
+                        // Games today that have already started
+                        AND: [
+                          {
+                            date: {
+                              equals: new Date(
+                                today.getFullYear(),
+                                today.getMonth(),
+                                today.getDate()
+                              ),
+                            },
+                          },
+                          {
+                            startTime: {
+                              lte: new Date(),
+                            },
+                          },
+                        ],
+                      },
+                    ],
+            },
           ],
-          date: type === "upcoming" ? { gte: today } : { lt: today },
         };
 
         const games = await db.game.findMany({
