@@ -70,9 +70,10 @@ export default function GamesPage() {
   }, [isLoaded, user, activeTab, fetchMyGames]);
 
   // Helper function to check if a date is today or in the future
-  const isDateTodayOrFuture = (dateString: string) => {
+  const isDateTodayOrFuture = (dateString: string, startTimeString: string) => {
     const inputDate = new Date(dateString);
-    const today = new Date();
+    const startTime = new Date(startTimeString);
+    const now = new Date();
 
     // Compare only the date parts
     const inputDateOnly = new Date(
@@ -81,22 +82,32 @@ export default function GamesPage() {
       inputDate.getDate()
     );
 
-    const todayOnly = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
+    const nowDateOnly = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
     );
 
-    // Date is today or in the future
-    return inputDateOnly >= todayOnly;
+    // If the game is on a future date, it's definitely upcoming
+    if (inputDateOnly > nowDateOnly) {
+      return true;
+    }
+
+    // If the game is on today's date, check if the start time is in the future
+    if (inputDateOnly.getTime() === nowDateOnly.getTime()) {
+      return startTime > now;
+    }
+
+    // Game is in the past
+    return false;
   };
 
   // Filter games to ensure they're properly categorized
   const upcomingGames = myGames.filter((game) =>
-    isDateTodayOrFuture(game.date)
+    isDateTodayOrFuture(game.date, game.startTime)
   );
   const pastGames = gameHistory.filter(
-    (game) => !isDateTodayOrFuture(game.date)
+    (game) => !isDateTodayOrFuture(game.date, game.startTime)
   );
 
   console.log("Upcoming count:", upcomingGames.length);

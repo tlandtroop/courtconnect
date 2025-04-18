@@ -5,10 +5,8 @@ import { useUser } from "@clerk/nextjs";
 import { Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import GameFinder from "@/app/(main)/dashboard/_components/game-finder";
-import FeaturedCourts from "@/app/(main)/dashboard/_components/featured-courts";
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
@@ -99,25 +97,19 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Main Content */}
-      <Tabs defaultValue="games" className="space-y-4">
-        <TabsList className="w-full md:w-auto">
-          <TabsTrigger value="games" className="flex-1 md:flex-none">
-            Games
-          </TabsTrigger>
-          <TabsTrigger value="courts" className="flex-1 md:flex-none">
-            Courts
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="games" className="space-y-4">
-          <GameFinder initialSortBy="date" />
-        </TabsContent>
-
-        <TabsContent value="courts" className="space-y-4">
-          <FeaturedCourts />
-        </TabsContent>
-      </Tabs>
+      {/* Upcoming Games Section */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Upcoming Games</h2>
+          <Link
+            href="/games"
+            className="text-blue-600 hover:text-blue-800 text-sm"
+          >
+            View All Games →
+          </Link>
+        </div>
+        <GameFinder initialSortBy="date" />
+      </div>
     </div>
   );
 }

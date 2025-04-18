@@ -4,8 +4,6 @@ import { Calendar, MapPin, Users } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Game } from "@/types";
@@ -14,23 +12,17 @@ interface GameFinderProps {
   initialSortBy?: "date" | "players" | "skill";
 }
 
-const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
+const GameFinder: React.FC<GameFinderProps> = () => {
   const router = useRouter();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [sortBy, setSortBy] = useState<"date" | "players" | "skill">(
-    (initialSortBy as "date" | "players" | "skill") || "date"
-  );
-  const [sortOrder, setSortOrder] = useState("asc");
   const [limit] = useState(5);
 
   const fetchGames = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/v1/games?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}&upcoming=true`
+        `/api/v1/games?page=1&limit=${limit}&sortBy=date&sortOrder=asc&upcoming=true`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch games");
@@ -38,14 +30,13 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
       const data = await response.json();
       if (data.success && data.games) {
         setGames(data.games);
-        setTotalPages(data.pagination?.totalPages || 1);
       }
     } catch (error) {
       console.error("Error fetching games:", error);
     } finally {
       setLoading(false);
     }
-  }, [page, limit, sortBy, sortOrder]);
+  }, [limit]);
 
   useEffect(() => {
     fetchGames();
@@ -53,15 +44,6 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
 
   const handleViewGame = (gameId: string) => {
     router.push(`/games/${gameId}`);
-  };
-
-  const handleSortChange = (newSortBy: "date" | "players" | "skill") => {
-    if (newSortBy === sortBy) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(newSortBy);
-      setSortOrder("asc");
-    }
   };
 
   const formatGameDate = (dateString: string) => {
@@ -144,46 +126,20 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
             </div>
             <h3 className="text-lg font-medium mb-2">No games found</h3>
             <p className="text-gray-500 mb-4">
-              There are no games matching your search criteria.
+              There are no upcoming games scheduled.
             </p>
             <div className="flex justify-center">
-              <Button onClick={() => router.push("/schedule")}>
+              <button
+                onClick={() => router.push("/schedule")}
+                className="text-blue-600 hover:text-blue-800"
+              >
                 Schedule a Game
-              </Button>
+              </button>
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {/* Add sorting controls */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex gap-2">
-              <Button
-                variant={sortBy === "date" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSortChange("date")}
-              >
-                Date {sortBy === "date" && (sortOrder === "asc" ? "↑" : "↓")}
-              </Button>
-              <Button
-                variant={sortBy === "players" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSortChange("players")}
-              >
-                Players{" "}
-                {sortBy === "players" && (sortOrder === "asc" ? "↑" : "↓")}
-              </Button>
-              <Button
-                variant={sortBy === "skill" ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleSortChange("skill")}
-              >
-                Skill Level{" "}
-                {sortBy === "skill" && (sortOrder === "asc" ? "↑" : "↓")}
-              </Button>
-            </div>
-          </div>
-
           {games.map((game) => (
             <Card
               key={game.id}
@@ -238,37 +194,6 @@ const GameFinder: React.FC<GameFinderProps> = ({ initialSortBy }) => {
               </CardContent>
             </Card>
           ))}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-4">
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-
-                <div className="flex items-center text-sm">
-                  <span className="mx-2">
-                    Page {page} of {totalPages}
-                  </span>
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={page === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
