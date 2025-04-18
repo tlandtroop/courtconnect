@@ -188,7 +188,6 @@ export default function PlayersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="games">Most Games</SelectItem>
-                <SelectItem value="winRate">Best Win Rate</SelectItem>
                 <SelectItem value="recentlyActive">Recently Active</SelectItem>
               </SelectContent>
             </Select>
