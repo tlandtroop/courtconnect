@@ -7,13 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, MapPin } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +19,6 @@ export default function GamesPage() {
   const [myGames, setMyGames] = useState<Game[]>([]);
   const [gameHistory, setGameHistory] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<"date" | "players" | "skill">("date");
 
   const fetchMyGames = useCallback(async () => {
     if (!user) return;
@@ -69,50 +61,6 @@ export default function GamesPage() {
     }
   }, [isLoaded, user, activeTab, fetchMyGames]);
 
-  // Helper function to check if a date is today or in the future
-  const isDateTodayOrFuture = (dateString: string, startTimeString: string) => {
-    const inputDate = new Date(dateString);
-    const startTime = new Date(startTimeString);
-    const now = new Date();
-
-    // Compare only the date parts
-    const inputDateOnly = new Date(
-      inputDate.getFullYear(),
-      inputDate.getMonth(),
-      inputDate.getDate()
-    );
-
-    const nowDateOnly = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
-
-    // If the game is on a future date, it's definitely upcoming
-    if (inputDateOnly > nowDateOnly) {
-      return true;
-    }
-
-    // If the game is on today's date, check if the start time is in the future
-    if (inputDateOnly.getTime() === nowDateOnly.getTime()) {
-      return startTime > now;
-    }
-
-    // Game is in the past
-    return false;
-  };
-
-  // Filter games to ensure they're properly categorized
-  const upcomingGames = myGames.filter((game) =>
-    isDateTodayOrFuture(game.date, game.startTime)
-  );
-  const pastGames = gameHistory.filter(
-    (game) => !isDateTodayOrFuture(game.date, game.startTime)
-  );
-
-  console.log("Upcoming count:", upcomingGames.length);
-  console.log("Past count:", pastGames.length);
-
   const formatGameDate = (date: string) => {
     return format(new Date(date), "EEEE, MMMM d");
   };
@@ -141,22 +89,6 @@ export default function GamesPage() {
             </TabsList>
 
             <div className="flex items-center space-x-4">
-              <Select
-                value={sortBy}
-                onValueChange={(value) =>
-                  setSortBy(value as "date" | "players" | "skill")
-                }
-              >
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Date (Soonest)</SelectItem>
-                  <SelectItem value="players">Available Spots</SelectItem>
-                  <SelectItem value="skill">Skill Level</SelectItem>
-                </SelectContent>
-              </Select>
-
               <Link href="/schedule">
                 <Button variant="outline">
                   <Calendar className="h-4 w-4 mr-2" />
@@ -185,7 +117,7 @@ export default function GamesPage() {
               <div className="space-y-8">
                 {/* Upcoming Games */}
                 <div>
-                  {upcomingGames.length === 0 ? (
+                  {myGames.length === 0 ? (
                     <Card>
                       <CardContent className="p-6 text-center">
                         <p className="text-gray-500 mb-4">
@@ -198,7 +130,7 @@ export default function GamesPage() {
                     </Card>
                   ) : (
                     <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                      {upcomingGames.map((game) => (
+                      {myGames.map((game) => (
                         <Link key={game.id} href={`/games/${game.id}`}>
                           <Card className="h-full hover:shadow-md transition-shadow">
                             <CardContent className="p-4">
@@ -242,7 +174,7 @@ export default function GamesPage() {
                 {/* Game History */}
                 <div>
                   <h2 className="text-lg font-medium mb-4">Game History</h2>
-                  {pastGames.length === 0 ? (
+                  {gameHistory.length === 0 ? (
                     <Card>
                       <CardContent className="p-6 text-center">
                         <p className="text-gray-500">No game history yet.</p>
@@ -250,7 +182,7 @@ export default function GamesPage() {
                     </Card>
                   ) : (
                     <div className="space-y-3">
-                      {pastGames.map((game) => (
+                      {gameHistory.map((game) => (
                         <Link key={game.id} href={`/games/${game.id}`}>
                           <Card className="hover:bg-gray-50 transition-colors">
                             <CardContent className="p-4">
@@ -260,8 +192,8 @@ export default function GamesPage() {
                                     {game.gameType}
                                   </div>
                                   <div className="text-sm text-gray-500">
-                                    {formatGameDate(game.date)} •{" "}
-                                    {game.court?.name}
+                                    {formatGameDate(game.date)} at{" "}
+                                    {formatGameTime(game.startTime)}
                                   </div>
                                 </div>
                                 <Badge variant="outline">
