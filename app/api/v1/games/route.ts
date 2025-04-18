@@ -285,10 +285,24 @@ export async function POST(request: NextRequest) {
         return errorResponse("Court not found", 404);
       }
 
+      // Parse the date string into a Date object in local timezone
+      const [year, month, day] = date.split("-").map(Number);
+      const gameDate = new Date(year, month - 1, day);
+      gameDate.setHours(0, 0, 0, 0);
+
+      // Parse the start time in local timezone
+      const startTimeDate = new Date(startTime);
+
+      // Validate game is not in the past
+      const now = new Date();
+      if (startTimeDate < now) {
+        return errorResponse("Cannot schedule a game in the past", 400);
+      }
+
       const game = await db.game.create({
         data: {
-          date: new Date(date),
-          startTime: new Date(`${date}T${startTime}`),
+          date: gameDate,
+          startTime: startTimeDate,
           gameType,
           skillLevel,
           playersNeeded: Number(playersNeeded),
@@ -308,6 +322,9 @@ export async function POST(request: NextRequest) {
           participants: true,
         },
       });
+
+      console.log("API - Created game date:", game.date);
+      console.log("API - Created game startTime:", game.startTime);
 
       revalidatePath("/games");
       revalidatePath(`/profile/${userId}`);

@@ -88,17 +88,48 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
     const fetchCourts = async () => {
       try {
         // First try to get user's location
-        let coordinates = { lat: 29.652, lng: 82.325 }; // Default to Gainesville
+        let coordinates = { lat: 29.652, lng: -82.325 }; // Default to Gainesville
         if (navigator.geolocation) {
-          const position = await new Promise<GeolocationPosition>(
-            (resolve, reject) => {
-              navigator.geolocation.getCurrentPosition(resolve, reject);
-            }
-          );
-          coordinates = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
+          try {
+            const position = await new Promise<GeolocationPosition>(
+              (resolve) => {
+                navigator.geolocation.getCurrentPosition(
+                  resolve,
+                  (error) => {
+                    console.warn("Geolocation error:", error);
+                    // If geolocation fails, use default coordinates
+                    resolve({
+                      coords: {
+                        latitude: coordinates.lat,
+                        longitude: coordinates.lng,
+                        accuracy: 0,
+                        altitude: null,
+                        altitudeAccuracy: null,
+                        heading: null,
+                        speed: null,
+                      },
+                      timestamp: Date.now(),
+                    } as GeolocationPosition);
+                  },
+                  {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0,
+                  }
+                );
+              }
+            );
+            coordinates = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            };
+          } catch (error) {
+            console.warn(
+              "Error getting location, using default coordinates:",
+              error
+            );
+            // Continue with default coordinates
+          }
         }
 
         // Fetch nearby courts from Google Places API
@@ -181,6 +212,17 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
       return;
     }
 
+    // Validate game time is not in the past
+    const now = new Date();
+    const gameDateTime = new Date(date);
+    const [hours, minutes] = time.split(":").map(Number);
+    gameDateTime.setHours(hours, minutes, 0, 0);
+
+    if (gameDateTime < now) {
+      setError("Cannot schedule a game in the past");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -232,12 +274,14 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
         finalCourtId = courtData.court.id;
       }
 
-      // Create the game
+      // Format the date as YYYY-MM-DD
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
 
+      // Create a date-time string in local timezone
+      const startTimeString = `${formattedDate}T${time}:00`;
       const gameResponse = await fetch("/api/v1/games", {
         method: "POST",
         headers: {
@@ -246,7 +290,7 @@ const GameForm = ({ preselectedCourtId }: GameFormProps) => {
         body: JSON.stringify({
           courtId: finalCourtId,
           date: formattedDate,
-          startTime: time,
+          startTime: startTimeString,
           gameType,
           skillLevel,
           playersNeeded,

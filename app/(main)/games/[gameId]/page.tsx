@@ -9,8 +9,6 @@ import {
   Clock,
   MapPin,
   Users,
-  MessageCircle,
-  Share2,
   ChevronLeft,
   Loader2,
 } from "lucide-react";
@@ -225,7 +223,7 @@ export default function GameDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Back Button */}
         <div className="mb-6">
@@ -428,87 +426,6 @@ export default function GameDetailPage() {
                     )}
                   </p>
                 </div>
-
-                <Separator />
-
-                <div className="flex gap-4">
-                  <Button variant="outline" className="gap-2">
-                    <Share2 className="h-4 w-4" />
-                    Share
-                  </Button>
-
-                  <Button variant="outline" className="gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    Contact Organizer
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Court Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Court Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-200 h-48 rounded-lg mb-4 flex items-center justify-center">
-                  <MapPin className="h-8 w-8 text-gray-400" />
-                </div>
-
-                {!game.court ? (
-                  <div className="text-center py-4 text-gray-500">
-                    <p>Court information is not available.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">
-                        Address
-                      </h3>
-                      <p className="text-gray-700">
-                        {game.court.address || "No address provided"}
-                        {game.court.city && game.court.state && (
-                          <>
-                            , {game.court.city}, {game.court.state}
-                          </>
-                        )}
-                        {game.court.zipCode && <> {game.court.zipCode}</>}
-                      </p>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 mb-1">
-                        Features
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {game.court.hasLights && (
-                          <Badge variant="outline">Lights</Badge>
-                        )}
-                        {game.court.hasWaterFountain && (
-                          <Badge variant="outline">Water Fountain</Badge>
-                        )}
-                        {game.court.hasRestrooms && (
-                          <Badge variant="outline">Restrooms</Badge>
-                        )}
-                        {game.court.isPickleball && (
-                          <Badge variant="outline">Pickleball</Badge>
-                        )}
-                        {game.court.isBasketball && (
-                          <Badge variant="outline">Basketball</Badge>
-                        )}
-                        {!game.court.hasLights &&
-                          !game.court.hasWaterFountain &&
-                          !game.court.hasRestrooms &&
-                          !game.court.isPickleball &&
-                          !game.court.isBasketball && (
-                            <span className="text-gray-500">
-                              No features listed
-                            </span>
-                          )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -590,25 +507,6 @@ export default function GameDetailPage() {
                       </Button>
                     </div>
                   )}
-              </CardContent>
-            </Card>
-
-            {/* Recommended Games */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Similar Games</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="text-center py-4 text-gray-500">
-                    <p>Recommended games will appear here.</p>
-                    <Link href="/courts">
-                      <Button variant="link" className="mt-2">
-                        Find more games
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
