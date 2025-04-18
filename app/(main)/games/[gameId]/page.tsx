@@ -44,6 +44,7 @@ export default function GameDetailPage() {
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [isGameInProgress, setIsGameInProgress] = useState(false);
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -95,6 +96,25 @@ export default function GameDetailPage() {
       fetchUserProfile();
     }
   }, [user, isLoaded]);
+
+  // Add effect to check game time in real-time
+  useEffect(() => {
+    if (!game) return;
+
+    const checkGameTime = () => {
+      const now = new Date();
+      const gameTime = new Date(game.startTime);
+      setIsGameInProgress(now > gameTime);
+    };
+
+    // Check immediately
+    checkGameTime();
+
+    // Set up interval to check every minute
+    const interval = setInterval(checkGameTime, 60000);
+
+    return () => clearInterval(interval);
+  }, [game]);
 
   // Handle joining a game
   const handleJoinGame = async () => {
@@ -171,7 +191,6 @@ export default function GameDetailPage() {
   // Check if the current user is already a participant
   const isParticipant = () => {
     if (!game || !userProfile || !game.participants) return false;
-
     return game.participants.some(
       (participant) => participant.id === userProfile.id
     );
@@ -180,8 +199,13 @@ export default function GameDetailPage() {
   // Check if the game is full
   const isGameFull = () => {
     if (!game || !game.participants) return false;
-
     return game.participants.length >= game.playersNeeded;
+  };
+
+  // Check if the game can be joined
+  const canJoinGame = () => {
+    if (!game || !userProfile) return false;
+    return !isGameInProgress && !isGameFull() && !isParticipant();
   };
 
   if (loading) {
@@ -300,12 +324,12 @@ export default function GameDetailPage() {
                   <div className="flex justify-center py-2">
                     <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                   </div>
-                ) : isGameInPast(game) ? (
+                ) : isGameInProgress ? (
                   <Badge
                     variant="secondary"
                     className="px-3 py-2 text-yellow-700 bg-yellow-100"
                   >
-                    This game has already taken place
+                    This game is in progress or has already taken place
                   </Badge>
                 ) : isParticipant() ? (
                   <div className="flex flex-col gap-2">
@@ -343,7 +367,7 @@ export default function GameDetailPage() {
                   <Button
                     onClick={handleJoinGame}
                     className="bg-blue-600 hover:bg-blue-700"
-                    disabled={isJoining}
+                    disabled={isJoining || !canJoinGame()}
                   >
                     {isJoining ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -498,7 +522,7 @@ export default function GameDetailPage() {
                       <Button
                         onClick={handleJoinGame}
                         className="w-full bg-blue-600 hover:bg-blue-700"
-                        disabled={isJoining}
+                        disabled={isJoining || !canJoinGame()}
                       >
                         {isJoining ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
